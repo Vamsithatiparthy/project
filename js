@@ -1,0 +1,228 @@
+import React, { useState } from "react";
+import {
+Bar,   BarChart, Cell, Pie,
+PieChart,   ResponsiveContainer, Tooltip, XAxis, YAxis
+} from "recharts";
+
+import "./SummaryTab.css";
+
+const dummyData = {
+  overall_summary: {
+    score: 87.5,
+    metrics: {
+      count: {
+        pass: 1200,
+        fail: 300,
+        error: 50,
+      },
+    },
+  },
+  quality_dimensions_summary: [
+    { name: "Accuracy", metrics: { count: { pass: 1200, fail: 300, error: 50 } } },
+    { name: "Completeness", metrics: { count: { pass: 1100, fail: 250, error: 30 } } },
+    { name: "Reliability", metrics: { count: { pass: 1000, fail: 200, error: 20 } } },
+    { name: "Timeliness", metrics: { count: { pass: 950, fail: 180, error: 25 } } },
+    { name: "Consistency", metrics: { count: { pass: 900, fail: 150, error: 20 } } },
+  ],
+  entities_summary: [
+    { name: "Customer", metrics: { count: { pass: 1200, fail: 300, error: 50 } } },
+    { name: "Order", metrics: { count: { pass: 1000, fail: 200, error: 30 } } },
+    { name: "Product", metrics: { count: { pass: 950, fail: 180, error: 25 } } },
+    { name: "Invoice", metrics: { count: { pass: 900, fail: 150, error: 20 } } },
+    { name: "Shipment", metrics: { count: { pass: 850, fail: 140, error: 15 } } },
+    { name: "Payment", metrics: { count: { pass: 800, fail: 130, error: 10 } } },
+    { name: "Supplier", metrics: { count: { pass: 750, fail: 120, error: 10 } } },
+    { name: "Warehouse", metrics: { count: { pass: 700, fail: 110, error: 5 } } },
+  ],
+};
+
+const COLORS = {
+  pass: "#61D661",
+  fail: "#C40000",
+  error: "#FFF84F",
+  Accuracy: "#15A796",
+  Completeness: "#C72887",
+  Reliability: "#8061BC",
+  Timeliness: "#E4780C",
+  Consistency: "#1E82CB", 
+};
+
+
+const SummaryTab = () => {
+  const [selectedStatus, setSelectedStatus] = useState(null);
+  const [selectedDimension, setSelectedDimension] = useState(null);
+
+  const handleReset = () => {
+    setSelectedStatus(null);
+    setSelectedDimension(null);
+  };
+
+  const getBarData = () => {
+    if (selectedDimension && !selectedStatus) {
+      const dimension = dummyData.quality_dimensions_summary.find(
+        (d) => d.name === selectedDimension
+      );
+      return dimension
+        ? ["pass", "fail", "error"].map((status) => ({
+            name: `${selectedDimension} - ${status}`,
+            count: dimension.metrics.count[status],
+          }))
+        : [];
+    }
+  
+    if (selectedDimension && selectedStatus) {
+      const dimension = dummyData.quality_dimensions_summary.find(
+        (d) => d.name === selectedDimension
+      );
+      console.log("Selected Dimension:", selectedDimension);
+      console.log("Selected Status:", selectedStatus);
+        console.log("Dimension Metrics:", dimension);
+
+      return dimension
+        ? [{
+            name: `${selectedDimension} - ${selectedStatus}`,
+            count: dimension.metrics.count[selectedStatus],
+          }]
+        : [];
+    }
+  
+    // If only status or nothing is selected, show entity summary
+    const status = selectedStatus || "pass";
+    return dummyData.entities_summary.map((entity) => ({
+      name: entity.name,
+      count: entity.metrics.count[status],
+    }));
+  };
+  
+  
+
+  const getMetricsData = () =>
+    dummyData.quality_dimensions_summary.map((qd) => ({
+      name: qd.name,
+      value: qd.metrics.count[selectedStatus || "pass"],
+    }));
+
+  const getOverallScoreData = () =>
+    ["pass", "fail", "error"].map((key) => ({
+      name: key.charAt(0).toUpperCase() + key.slice(1),
+      value: dummyData.overall_summary.metrics.count[key],
+      key,
+    }));
+
+  return (
+    <div className="summary-tab-container">
+      <div className="summary-header">
+        <h2></h2>
+        <button className="reset-button" onClick={handleReset}>Reset</button>
+      </div>
+
+      <div className="summary-content">
+        <div className="bar-chart-section">
+          <div className="bar-chart-scroll-box">
+          <ResponsiveContainer width="100%" height={Math.max(getBarData().length * 40, 100)}>
+              <BarChart
+                layout="vertical"
+                data={getBarData()}
+                margin={{ top: 10, right: 30, left: 80, bottom: 10 }}
+              >
+                <XAxis type="number" />
+                <YAxis dataKey="name" type="category" />
+                <Tooltip />
+                <Bar dataKey="count" fill="#8884d8" barSize={20} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="donut-charts-wrapper">
+          {/* Overall Score Donut */}
+          <div className="donut-chart-block">
+            <ResponsiveContainer width="60%" height={250}>
+              <PieChart>
+                <Pie
+                  data={getOverallScoreData()}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={100}
+                  label={false}
+                  onClick={(data) => setSelectedStatus(data.key)}
+                >
+                  {getOverallScoreData().map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[entry.key]}
+                      stroke={selectedStatus === entry.key ? "#000" : "#fff"}
+                      strokeWidth={selectedStatus === entry.key ? 3 : 1}
+                      cursor="pointer"
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="donut-labels">
+              <div className="donut-center">
+                Overall Score<br />{dummyData.overall_summary.score}%
+              </div>
+              {getOverallScoreData().map((entry) => (
+                <div
+                  key={entry.key}
+                  className={`donut-label ${selectedStatus === entry.key ? "active" : ""}`}
+                  onClick={() => setSelectedStatus(entry.key)}
+                >
+                  <span style={{ backgroundColor: COLORS[entry.key] }}></span>
+                  {entry.name}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Quality Dimensions Donut */}
+          <div className="donut-chart-block">
+            <ResponsiveContainer width="60%" height={250}>
+              <PieChart>
+                <Pie
+                  data={getMetricsData()}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={100}
+                  label={false}
+                  onClick={(data) => setSelectedDimension(data.name)}
+                >
+                  {getMetricsData().map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[entry.name]}
+                      stroke={selectedDimension === entry.name ? "#000" : "#fff"}
+                      strokeWidth={selectedDimension === entry.name ? 3 : 1}
+                      cursor="pointer"
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="donut-labels">
+              {getMetricsData().map((entry) => (
+                <div
+                  key={entry.name}
+                  className={`donut-label ${selectedDimension === entry.name ? "active" : ""}`}
+                  onClick={() => setSelectedDimension(entry.name)}
+                >
+                  <span style={{ backgroundColor: COLORS[entry.name] }}></span>
+                  {entry.name} {entry.value}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SummaryTab;
