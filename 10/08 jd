@@ -1,0 +1,673 @@
+import React, { useState } from "react";
+import {
+  Bar,
+  BarChart,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+import "./App.css";
+import { FaSearch } from "react-icons/fa";
+
+const dummyData = {
+  overall_summary: {
+    score: 87.5,
+    metrics: {
+      count: {
+        pass: 1200,
+        fail: 300,
+        error: 50,
+      },
+    },
+  },
+  quality_dimensions_summary: [
+    {
+      name: "Accuracy",
+      metrics: { count: { pass: 1200, fail: 300, error: 50 } },
+    },
+    {
+      name: "Completeness",
+      metrics: { count: { pass: 1100, fail: 250, error: 30 } },
+    },
+    {
+      name: "Reliability",
+      metrics: { count: { pass: 1000, fail: 200, error: 20 } },
+    },
+    {
+      name: "Timeliness",
+      metrics: { count: { pass: 950, fail: 180, error: 25 } },
+    },
+    {
+      name: "Consistency",
+      metrics: { count: { pass: 900, fail: 150, error: 20 } },
+    },
+  ],
+  entities_summary: [
+    {
+      name: "Customer",
+      metrics: {
+        count: { pass: 1200, fail: 300, error: 50 },
+        rules: [
+          { name: "Rule X", count: 400 },
+          { name: "Rule Y", count: 500 },
+          { name: "Rule Z", count: 300 },
+        ],
+      },
+    },
+    {
+      name: "Order",
+      metrics: {
+        count: { pass: 1000, fail: 200, error: 30 },
+        rules: [
+          { name: "Rule A", count: 600 },
+          { name: "Rule B", count: 400 },
+        ],
+      },
+    },
+    {
+      name: "Product",
+      metrics: {
+        count: { pass: 950, fail: 180, error: 25 },
+        rules: [
+          { name: "Rule 1", count: 300 },
+          { name: "Rule 2", count: 350 },
+          { name: "Rule 3", count: 300 },
+        ],
+      },
+    },
+    {
+      name: "Invoice",
+      metrics: {
+        count: { pass: 900, fail: 150, error: 20 },
+        rules: [
+          { name: "Rule 1", count: 100 },
+          { name: "Rule 2", count: 100 },
+          { name: "Rule 3", count: 100 },
+          { name: "Rule 4", count: 100 },
+          { name: "Rule 5", count: 100 },
+          { name: "Rule 6", count: 100 },
+          { name: "Rule 7", count: 100 },
+          { name: "Rule 8", count: 100 },
+          { name: "Rule 9", count: 100 },
+        ],
+      },
+    },
+    {
+      name: "Shipment",
+      metrics: {
+        count: { pass: 850, fail: 140, error: 15 },
+        rules: [
+          { name: "Rule A", count: 400 },
+          { name: "Rule B", count: 250 },
+          { name: "Rule C", count: 200 },
+        ],
+      },
+    },
+    {
+      name: "Payment",
+      metrics: {
+        count: { pass: 800, fail: 130, error: 10 },
+        rules: [
+          { name: "Rule 1", count: 500 },
+          { name: "Rule 2", count: 300 },
+        ],
+      },
+    },
+    {
+      name: "Supplier",
+      metrics: {
+        count: { pass: 750, fail: 120, error: 10 },
+        rules: [
+          { name: "Rule X", count: 250 },
+          { name: "Rule Y", count: 300 },
+          { name: "Rule Z", count: 200 },
+        ],
+      },
+    },
+    {
+      name: "Warehouse",
+      metrics: {
+        count: { pass: 700, fail: 110, error: 5 },
+        rules: [
+          { name: "Rule W", count: 300 },
+          { name: "Rule E", count: 250 },
+          { name: "Rule R", count: 150 },
+        ],
+      },
+    },
+    {
+      name: "Customer",
+      metrics: {
+        count: { pass: 1200, fail: 300, error: 50 },
+        rules: [
+          { name: "Rule X", count: 400 },
+          { name: "Rule Y", count: 500 },
+          { name: "Rule Z", count: 300 },
+        ],
+      },
+    },
+    {
+      name: "Order",
+      metrics: {
+        count: { pass: 1000, fail: 200, error: 30 },
+        rules: [
+          { name: "Rule A", count: 600 },
+          { name: "Rule B", count: 400 },
+        ],
+      },
+    },
+    {
+      name: "Product",
+      metrics: {
+        count: { pass: 950, fail: 180, error: 25 },
+        rules: [
+          { name: "Rule 1", count: 300 },
+          { name: "Rule 2", count: 350 },
+          { name: "Rule 3", count: 300 },
+        ],
+      },
+    },
+    {
+      name: "Invoice",
+      metrics: {
+        count: { pass: 900, fail: 150, error: 20 },
+        rules: [
+          { name: "Rule 1", count: 100 },
+          { name: "Rule 2", count: 100 },
+          { name: "Rule 3", count: 100 },
+          { name: "Rule 4", count: 100 },
+          { name: "Rule 5", count: 100 },
+          { name: "Rule 6", count: 100 },
+          { name: "Rule 7", count: 100 },
+          { name: "Rule 8", count: 100 },
+          { name: "Rule 9", count: 100 },
+        ],
+      },
+    },
+    {
+      name: "Shipment",
+      metrics: {
+        count: { pass: 850, fail: 140, error: 15 },
+        rules: [
+          { name: "Rule A", count: 400 },
+          { name: "Rule B", count: 250 },
+          { name: "Rule C", count: 200 },
+        ],
+      },
+    },
+    {
+      name: "Payment",
+      metrics: {
+        count: { pass: 800, fail: 130, error: 10 },
+        rules: [
+          { name: "Rule 1", count: 500 },
+          { name: "Rule 2", count: 300 },
+        ],
+      },
+    },
+    {
+      name: "Supplier",
+      metrics: {
+        count: { pass: 750, fail: 120, error: 10 },
+        rules: [
+          { name: "Rule X", count: 250 },
+          { name: "Rule Y", count: 300 },
+          { name: "Rule Z", count: 200 },
+        ],
+      },
+    },
+    {
+      name: "Warehouse",
+      metrics: {
+        count: { pass: 700, fail: 110, error: 5 },
+        rules: [
+          { name: "Rule W", count: 300 },
+          { name: "Rule E", count: 250 },
+          { name: "Rule R", count: 150 },
+        ],
+      },
+    },
+    {
+      name: "Customer",
+      metrics: {
+        count: { pass: 1200, fail: 300, error: 50 },
+        rules: [
+          { name: "Rule X", count: 400 },
+          { name: "Rule Y", count: 500 },
+          { name: "Rule Z", count: 300 },
+        ],
+      },
+    },
+  ],
+};
+
+const COLORS = {
+  pass: "#61D661",
+  fail: "#C40000",
+  error: "#FFF84F",
+  Accuracy: "#15A796",
+  Completeness: "#C72887",
+  Reliability: "#8061BC",
+  Timeliness: "#E4780C",
+  Consistency: "#1E82CB",
+};
+
+const App = () => {
+  const [selectedStatus, setSelectedStatus] = useState(null);
+  const [selectedDimension, setSelectedDimension] = useState(null);
+  const [tooltipX, setTooltipX] = useState(0);
+  const [tooltipY, setTooltipY] = useState(0);
+  const [selectedEntity, setSelectedEntity] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleReset = () => {
+    setSelectedStatus(null);
+    setSelectedDimension(null);
+  };
+
+  const CustomTooltip = ({
+    entity,
+    payload,
+    label,
+    onClose,
+    tooltipX,
+    tooltipY,
+  }) => {
+    if (!entity) return null;
+    const rules = entity.rules || [];
+
+    return (
+      <div
+        className="custom-tooltip"
+        style={{
+          position: "absolute",
+          top: tooltipY + 10,
+          left: tooltipX + 10,
+          background: "white",
+          border: "1px solid #ccc",
+          padding: "10px",
+          borderRadius: "4px",
+          zIndex: 10,
+          width: "250px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <strong>{label}</strong>
+            <br />
+            Total: {payload?.[0]?.value ?? 0}
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: "transparent",
+              border: "none",
+              fontSize: "16px",
+              cursor: "pointer",
+              marginLeft: "10px",
+            }}
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+        {rules.length > 0 ? (
+          <div style={{ marginTop: "10px", width: "100%", maxHeight: "250px" }}>
+            <div style={{ height: "100px", overflowY: "auto" }}>
+              <ResponsiveContainer
+                width="100%"
+                height={Math.max(rules.length * 35, 100)}
+              >
+                <BarChart
+                  data={rules}
+                  layout="vertical"
+                  margin={{ top: 0, bottom: 0, left: -42, right: 20 }}
+                >
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 10 }}
+                    domain={[0, "dataMax"]}
+                    hide
+                  />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    width={80}
+                    tick={{ fontSize: 10 }}
+                  />
+                  <Tooltip cursor={false}/>
+                  <Bar dataKey="count" fill="#8884d8" barSize={10} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div style={{ height: "40px", paddingRight: "20px", overflowX: "hidden" }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={rules}
+                  layout="vertical"
+                  margin={{ top: 0, bottom: 0, left: 38, right: 0 }}
+                >
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 10 }}
+                    domain={[0, "dataMax"]}
+                  />
+                  <Bar dataKey="count" fill="transparent" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        ) : (
+          <div>No rules available</div>
+        )}
+      </div>
+    );
+  };
+
+  function filterEntitiesSummary(searchTerm) {
+    if (!searchTerm.trim()) return dummyData.entities_summary;
+
+    const term = searchTerm.toLowerCase();
+
+    return dummyData.entities_summary
+      .map((entity) => {
+        const entityMatch = entity.name.toLowerCase().includes(term);
+        if (entityMatch) {
+          return entity;
+        }
+
+        const matchedRules = entity.metrics.rules.filter((rule) =>
+          rule.name.toLowerCase().includes(term)
+        );
+
+        if (matchedRules.length > 0) {
+          return {
+            ...entity,
+            metrics: {
+              ...entity.metrics,
+              rules: matchedRules,
+            },
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+  }
+
+  const getBarData = () => {
+    if (selectedDimension && !selectedStatus) {
+      const dimension = dummyData.quality_dimensions_summary.find(
+        (d) => d.name === selectedDimension
+      );
+      return dimension
+        ? ["pass", "fail", "error"].map((status) => ({
+            name: `${selectedDimension} • ${status}`, // clearer label
+            count: dimension.metrics.count[status],
+          }))
+        : [];
+    }
+
+    if (selectedDimension && selectedStatus) {
+      const dimension = dummyData.quality_dimensions_summary.find(
+        (d) => d.name === selectedDimension
+      );
+      return dimension
+        ? [
+            {
+              name: `${selectedDimension} • ${selectedStatus}`, // clearer
+              count: dimension.metrics.count[selectedStatus],
+            },
+          ]
+        : [];
+    }
+
+
+    const entities = filterEntitiesSummary(
+      searchTerm,
+      dummyData.entities_summary
+    );
+    const status = selectedStatus || "pass";
+    return entities.map((entity) => ({
+      name: entity.name,
+      count: entity.metrics.count[status],
+      rules: entity.metrics.rules,
+    }));
+  };
+
+  const getMetricsData = () =>
+    dummyData.quality_dimensions_summary.map((qd) => ({
+      name: qd.name,
+      value: qd.metrics.count[selectedStatus || "pass"],
+    }));
+
+  const getOverallScoreData = () =>
+    ["pass", "fail", "error"].map((key) => ({
+      name: key.charAt(0).toUpperCase() + key.slice(1),
+      value: dummyData.overall_summary.metrics.count[key],
+      key,
+    }));
+
+  return (
+    <div className="summary-tab-container">
+      <div className="summary-header">
+        <h2></h2>
+        <button className="reset-button" onClick={handleReset}>
+          Reset
+        </button>
+      </div>
+
+      <div className="summary-content">
+        <div className="bar-chart-section">
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              marginBottom: 16,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                background: "#fff",
+                border: "1px solid #ccc",
+                borderRadius: 4,
+                padding: "2px 8px",
+                width: 250,
+              }}
+            >
+              <FaSearch style={{ marginRight: 8, color: "#888" }} />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search entities or rules..."
+                style={{
+                  width: 170,
+                  border: "none",
+                  outline: "none",
+                  fontSize: 14,
+                  background: "transparent",
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="bar-chart-scroll-box">
+            <ResponsiveContainer
+              width="100%"
+              height={Math.max(getBarData().length * 40, 100)}
+            >
+              <BarChart
+                layout="vertical"
+                data={getBarData()}
+                margin={{ top: 0, right: 20, left: 0, bottom: 0 }}
+              >
+                <XAxis type="number" domain={[0, "dataMax"]} hide />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  tick={{ fontSize: 12 }}
+                  width={100}
+                />
+                <Tooltip cursor={false}/>
+
+                <Bar
+                  dataKey="count"
+                  fill="#8884d8"
+                  barSize={20}
+                  onClick={(data, index, event) => {
+                    const mouseX = event.pageX;
+                    const mouseY = event.pageY;
+                    setTooltipX(mouseX);
+                    setTooltipY(mouseY);
+                    setSelectedEntity(getBarData()[index]);
+                  }}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+
+            {selectedEntity && (
+              <div className="custom-tooltip">
+                <CustomTooltip
+                  entity={selectedEntity}
+                  label={selectedEntity?.name}
+                  payload={[{ value: selectedEntity?.count }]}
+                  tooltipX={tooltipX}
+                  tooltipY={tooltipY}
+                  onClose={() => setSelectedEntity(null)}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="fixed-x-axis">
+            <ResponsiveContainer width="100%" height={50}>
+              <BarChart
+                layout="vertical"
+                data={getBarData()}
+                margin={{ top: 0, right: 0, left: 100, bottom: 0 }}
+              >
+                <XAxis
+                  type="number"
+                  domain={[0, "dataMax"]}
+                  tick={{ fontSize: 12 }}
+                />
+                <Bar dataKey="count" fill="transparent" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="donut-charts-wrapper">
+          {/* Overall Score Donut */}
+          <div className="donut-chart-block">
+            <ResponsiveContainer width="60%" height={250}>
+              <PieChart>
+                <Pie
+                  data={getOverallScoreData()}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={100}
+                  label={false}
+                  onClick={(data) => setSelectedStatus(data.key)}
+                >
+                  {getOverallScoreData().map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[entry.key]}
+                      stroke={selectedStatus === entry.key ? "#000" : "#fff"}
+                      strokeWidth={selectedStatus === entry.key ? 3 : 1}
+                      cursor="pointer"
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="donut-labels">
+              <div className="donut-center">
+                Overall Score
+                <br />
+                {dummyData.overall_summary.score}%
+              </div>
+              {getOverallScoreData().map((entry) => (
+                <div
+                  key={entry.key}
+                  className={`donut-label ${
+                    selectedStatus === entry.key ? "active" : ""
+                  }`}
+                  onClick={() => setSelectedStatus(entry.key)}
+                >
+                  <span style={{ backgroundColor: COLORS[entry.key] }}></span>
+                  {entry.name}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Quality Dimensions Donut */}
+          <div className="donut-chart-block">
+            <ResponsiveContainer width="60%" height={250}>
+              <PieChart>
+                <Pie
+                  data={getMetricsData()}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={70}
+                  outerRadius={100}
+                  label={false}
+                  onClick={(data) => setSelectedDimension(data.name)}
+                >
+                  {getMetricsData().map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[entry.name]}
+                      stroke={
+                        selectedDimension === entry.name ? "#000" : "#fff"
+                      }
+                      strokeWidth={selectedDimension === entry.name ? 3 : 1}
+                      cursor="pointer"
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="donut-labels">
+              {getMetricsData().map((entry) => (
+                <div
+                  key={entry.name}
+                  className={`donut-label ${
+                    selectedDimension === entry.name ? "active" : ""
+                  }`}
+                  onClick={() => setSelectedDimension(entry.name)}
+                >
+                  <span style={{ backgroundColor: COLORS[entry.name] }}></span>
+                  {entry.name} {entry.value}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;
