@@ -1,0 +1,34 @@
+import { Charts } from '@abyss/web/ui/Charts';
+
+
+() => {
+  const labels = ['Promoters', 'Passives', 'Detractors'];
+
+  const data = {
+    labels,
+    datasets: [
+      {
+        label: 'Score',
+        data: [65, 59, 80],
+        backgroundColor: [
+          '$primaryDvz1',
+          Charts.pattern.draw('line', '$secondaryDvz1'),
+          Charts.pattern.draw('diagonal', '$purpleDvz1'),
+        ],
+        borderColor: ['$primaryDvz1', '$secondaryDvz1', '$purpleDvz1'],
+      },
+    ],
+  };
+
+  return (
+    <div>
+      <Charts.Donut
+        data={data}
+        title="Avg Nps Score"
+        subtitle="Percentage by group type"
+        xAxisLabel="Type"
+        yAxisLabel="Score"
+      />
+    </div>
+  );
+};
