@@ -1,0 +1,56 @@
+import { DataTable } from '@abyss/web/ui/DataTable';
+import { useDataTable } from '@abyss/web/hooks/useDataTable';
+
+
+
+
+() => {
+  const { columns } = utils.useDocDataTable(1000);
+
+  const data = [
+    {
+      col1: 'Col 1/Row 1',
+      col2: 'Col 2/Row 1',
+      subRows: [
+        {
+          col1: 'Sub Row (0) Col 1/Row 1',
+          col2: 'Sub Row (0) Col 2/Row 1',
+          subRows: [
+            {
+              col1: 'Sub Row (1) Col 1/Row 1',
+              col2: 'Sub Row (1) Col 2/Row 1',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      col1: 'Col 1/Row 2',
+      col2: 'Col 2/Row 2',
+    },
+    {
+      col1: 'Col 1/Row 3',
+      col2: 'Col 2/Row 3',
+    },
+    {
+      col1: 'Col 1/Row 4',
+      col2: 'Col 2/Row 4',
+      subRows: [
+        {
+          col1: 'Sub Row (0) Col 1/Row 4',
+          col2: 'Sub Row (0) Col 2/Row 4',
+        },
+      ],
+    },
+  ];
+
+  const dataTablePropsPagination = useDataTable({
+    initialData: data,
+    initialColumns: columns,
+    showExpansion: true,
+  });
+
+  return (
+    <DataTable title="Expansion Rows" tableState={dataTablePropsPagination} />
+  );
+};
