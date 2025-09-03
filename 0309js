@@ -1,0 +1,749 @@
+import React, { useEffect, useRef,useState } from "react";
+import { FaSearch } from "react-icons/fa";
+import PropTypes from "prop-types";
+import {
+  Bar,
+  BarChart,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+import "../../styles/scss/_overview_tab.scss";
+// import './App.css';
+const dummyData = {
+  overall_summary: {
+    metrics: {
+      count: {
+        pass: 1200,
+        fail: 300,
+        error: 50,
+      },
+    },
+  },
+  quality_dimensions_summary: [
+    {
+      name: "Accuracy",
+      metrics: { count: { pass: 1200, fail: 300, error: 50 } },
+    },
+    {
+      name: "Completeness",
+      metrics: { count: { pass: 1100, fail: 250, error: 30 } },
+    },
+    {
+      name: "Reliability",
+      metrics: { count: { pass: 1000, fail: 200, error: 20 } },
+    },
+    {
+      name: "Timeliness",
+      metrics: { count: { pass: 950, fail: 180, error: 25 } },
+    },
+    {
+      name: "Consistency",
+      metrics: { count: { pass: 900, fail: 150, error: 20 } },
+    },
+  ],
+  entities_summary: [
+    {
+      name: "Customer",
+      metrics: {
+        count: { pass: 1200, fail: 300, error: 50 },
+        rules: [
+          { name: "Rule X", count: 400 },
+          { name: "Rule Y", count: 500 },
+          { name: "Rule Z", count: 300 },
+        ],
+      },
+    },
+    {
+      name: "Order",
+      metrics: {
+        count: { pass: 1000, fail: 200, error: 30 },
+        rules: [
+          { name: "Rule A", count: 600 },
+          { name: "Rule B", count: 400 },
+        ],
+      },
+    },
+    {
+      name: "Product",
+      metrics: {
+        count: { pass: 950, fail: 180, error: 25 },
+        rules: [
+          { name: "Rule 1", count: 300 },
+          { name: "Rule 2", count: 350 },
+          { name: "Rule 3", count: 300 },
+        ],
+      },
+    },
+    {
+      name: "Invoice",
+      metrics: {
+        count: { pass: 900, fail: 150, error: 20 },
+        rules: [
+          { name: "Rule 1", count: 100 },
+          { name: "Rule 2", count: 100 },
+          { name: "Rule 3", count: 100 },
+          { name: "Rule 4", count: 100 },
+          { name: "Rule 5", count: 100 },
+          { name: "Rule 6", count: 100 },
+          { name: "Rule 7", count: 100 },
+          { name: "Rule 8", count: 100 },
+          { name: "Rule 9", count: 100 },
+        ],
+      },
+    },
+    {
+      name: "Shipment",
+      metrics: {
+        count: { pass: 850, fail: 140, error: 15 },
+        rules: [
+          { name: "Rule A", count: 400 },
+          { name: "Rule B", count: 250 },
+          { name: "Rule C", count: 200 },
+        ],
+      },
+    },
+    {
+      name: "Payment",
+      metrics: {
+        count: { pass: 800, fail: 130, error: 10 },
+        rules: [
+          { name: "Rule 1", count: 500 },
+          { name: "Rule 2", count: 300 },
+        ],
+      },
+    },
+    {
+      name: "Supplier",
+      metrics: {
+        count: { pass: 750, fail: 120, error: 10 },
+        rules: [
+          { name: "Rule X", count: 250 },
+          { name: "Rule Y", count: 300 },
+          { name: "Rule Z", count: 200 },
+        ],
+      },
+    },
+    {
+      name: "Warehouse",
+      metrics: {
+        count: { pass: 700, fail: 110, error: 5 },
+        rules: [
+          { name: "Rule W", count: 300 },
+          { name: "Rule E", count: 250 },
+          { name: "Rule R", count: 150 },
+        ],
+      },
+    },
+    {
+      name: "Inventory",
+      metrics: {
+        count: { pass: 650, fail: 100, error: 8 },
+        rules: [
+          { name: "Rule I1", count: 200 },
+          { name: "Rule I2", count: 250 },
+          { name: "Rule I3", count: 200 },
+        ],
+      },
+    },
+    {
+      name: "Transaction",
+      metrics: {
+        count: { pass: 600, fail: 90, error: 12 },
+        rules: [
+          { name: "Rule T1", count: 300 },
+          { name: "Rule T2", count: 200 },
+          { name: "Rule T3", count: 100 },
+        ],
+      },
+    },
+    {
+      name: "User",
+      metrics: {
+        count: { pass: 550, fail: 80, error: 15 },
+        rules: [
+          { name: "Rule U1", count: 200 },
+          { name: "Rule U2", count: 200 },
+          { name: "Rule U3", count: 150 },
+        ],
+      },
+    },
+    {
+      name: "Account",
+      metrics: {
+        count: { pass: 500, fail: 70, error: 18 },
+        rules: [
+          { name: "Rule A1", count: 150 },
+          { name: "Rule A2", count: 200 },
+          { name: "Rule A3", count: 150 },
+        ],
+      },
+    },
+    {
+      name: "Category",
+      metrics: {
+        count: { pass: 450, fail: 60, error: 20 },
+        rules: [
+          { name: "Rule C1", count: 100 },
+          { name: "Rule C2", count: 150 },
+          { name: "Rule C3", count: 200 },
+        ],
+      },
+    },
+    {
+      name: "Tag",
+      metrics: {
+        count: { pass: 400, fail: 50, error: 22 },
+        rules: [
+          { name: "Rule T1", count: 120 },
+          { name: "Rule T2", count: 150 },
+          { name: "Rule T3", count: 130 },
+        ],
+      },
+    },
+    {
+      name: "Comment",
+      metrics: {
+        count: { pass: 350, fail: 40, error: 25 },
+        rules: [
+          { name: "Rule C1", count: 100 },
+          { name: "Rule C2", count: 150 },
+          { name: "Rule C3", count: 100 },
+        ],
+      },
+    },
+    {
+      name: "Review",
+      metrics: {
+        count: { pass: 300, fail: 35, error: 28 },
+        rules: [
+          { name: "Rule R1", count: 80 },
+          { name: "Rule R2", count: 120 },
+          { name: "Rule R3", count: 100 },
+        ],
+      },
+    },
+    {
+      name: "Rating",
+      metrics: {
+        count: { pass: 250, fail: 30, error: 30 },
+        rules: [
+          { name: "Rule R1", count: 70 },
+          { name: "Rule R2", count: 100 },
+          { name: "Rule R3", count: 80 },
+        ],
+      },
+    },
+    {
+      name: "Notification",
+      metrics: {
+        count: { pass: 200, fail: 25, error: 32 },
+        rules: [
+          { name: "Rule N1", count: 60 },
+          { name: "Rule N2", count: 80 },
+          { name: "Rule N3", count: 60 },
+        ],
+      },
+    },
+    {
+      name: "Message",
+      metrics: {
+        count: { pass: 150, fail: 20, error: 35 },
+        rules: [
+          { name: "Rule M1", count: 50 },
+          { name: "Rule M2", count: 60 },
+          { name: "Rule M3", count: 40 },
+        ],
+      },
+    },
+    {
+      name: "Log",
+      metrics: {
+        count: { pass: 100, fail: 15, error: 40 },
+        rules: [
+          { name: "Rule L1", count: 30 },
+          { name: "Rule L2", count: 40 },
+          { name: "Rule L3", count: 30 },
+        ],
+      },
+    },
+    {
+      name: "Audit",
+      metrics: {
+        count: { pass: 80, fail: 12, error: 45 },
+        rules: [
+          { name: "Rule A1", count: 25 },
+          { name: "Rule A2", count: 30 },
+          { name: "Rule A3", count: 25 },
+        ],
+      },
+    },
+    {
+      name: "Backup",
+      metrics: {
+        count: { pass: 60, fail: 10, error: 50 },
+        rules: [
+          { name: "Rule B1", count: 20 },
+          { name: "Rule B2", count: 25 },
+          { name: "Rule B3", count: 15 },
+        ],
+      },
+    },
+    {
+      name: "Archive",
+      metrics: {
+        count: { pass: 40, fail: 8, error: 55 },
+        rules: [
+          { name: "Rule A1", count: 15 },
+          { name: "Rule A2", count: 20 },
+          { name: "Rule A3", count: 5 },
+        ],
+      },
+    },
+    {
+      name: "Cache",
+      metrics: {
+        count: { pass: 30, fail: 5, error: 60 },
+        rules: [
+          { name: "Rule C1", count: 10 },
+          { name: "Rule C2", count: 15 },
+          { name: "Rule C3", count: 5 },
+        ],
+      },
+    },
+    {
+      name: "Session",
+      metrics: {
+        count: { pass: 25, fail: 4, error: 65 },
+        rules: [
+          { name: "Rule S1", count: 8 },
+          { name: "Rule S2", count: 12 },
+          { name: "Rule S3", count: 5 },
+        ],
+      },
+    },
+    {
+      name: "Token",
+      metrics: {
+        count: { pass: 20, fail: 3, error: 70 },
+        rules: [
+          { name: "Rule T1", count: 6 },
+          { name: "Rule T2", count: 10 },
+          { name: "Rule T3", count: 4 },
+        ],
+      },
+    },
+    {
+      name: "Key",
+      metrics: {
+        count: { pass: 15, fail: 2, error: 75 },
+        rules: [
+          { name: "Rule K1", count: 5 },
+          { name: "Rule K2", count: 7 },
+          { name: "Rule K3", count: 3 },
+        ],
+      },
+    },
+    {
+      name: "Secret",
+      metrics: {
+        count: { pass: 10, fail: 1, error: 80 },
+        rules: [
+          { name: "Rule S1", count: 3 },
+          { name: "Rule S2", count: 5 },
+          { name: "Rule S3", count: 2 },
+        ],
+      },
+    },
+  ],
+};
+
+const COLORS = {
+  pass: "#61D661",
+  fail: "#C40000",
+  error: "#B1B2B4",
+  Accuracy: "#15A796",
+  Completeness: "#C72887",
+  Reliability: "#8061BC",
+  Timeliness: "#E4780C",
+  Consistency: "#1E82CB",
+};
+
+const OverviewTab = () => {
+  const [selectedStatus, setSelectedStatus] = useState(null);
+  const [selectedDimension, setSelectedDimension] = useState(null);
+  const [tooltipX, setTooltipX] = useState(0);
+  const [tooltipY, setTooltipY] = useState(0);
+  const [selectedEntity, setSelectedEntity] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const tooltipRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+        setSelectedEntity(null);
+      }
+    };
+
+    if (selectedEntity) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [selectedEntity]);
+
+  const handleReset = () => {
+    setSelectedStatus(null);
+    setSelectedDimension(null);
+  };
+
+  const CustomTooltip = ({
+    entity,
+    payload,
+    label,
+    onClose,
+    tooltipX,
+    tooltipY,
+  }) => {
+    if (!entity) return null;
+    const rules = entity.rules || [];
+
+    const getTooltipPosition = () => {
+      const tooltipWidth = 250;
+      const tooltipHeight = rules.length > 0 ? 350 : 80;
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+
+      let x = tooltipX + 10;
+      let y = tooltipY + 10;
+
+      if (x + tooltipWidth > windowWidth - 20) {
+        x = tooltipX - tooltipWidth - 10;
+      }
+
+      if (y + tooltipHeight > windowHeight - 20) {
+        y = tooltipY - tooltipHeight - 10;
+      }
+
+      if (y < 20) {
+        y = 20;
+      }
+
+      if (x < 20) {
+        x = 20;
+      }
+
+      return { x, y };
+    };
+
+    const position = getTooltipPosition();
+
+    return (
+      <div
+        ref={tooltipRef}
+        className="tooltip-container"
+        style={{
+          top: position.y,
+          left: position.x,
+        }}
+      >
+        <div className="tooltip-header-container">
+          <div>
+            <strong>{label}</strong>
+            <br />
+            Total: {payload?.[0]?.value ?? 0}
+          </div>
+          <button
+            onClick={onClose}
+            className="tooltip-close-button"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+        {rules.length > 0 ? (
+          <div className="tooltip-content">
+            <div className="tooltip-chart-container">
+              <ResponsiveContainer
+                width="100%"
+                height={Math.max(rules.length * 35, 100)}
+              >
+                <BarChart
+                  data={rules}
+                  layout="vertical"
+                  margin={{ top: 0, bottom: 0, left: -42, right: 20 }}
+                >
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 10 }}
+                    domain={[0, "dataMax"]}
+                    hide
+                  />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    width={80}
+                    tick={{ fontSize: 10 }}
+                  />
+                  <Tooltip cursor={false} />
+                  <Bar dataKey="count" fill="#8884d8" barSize={10} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="tooltip-xaxis-container">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={rules}
+                  layout="vertical"
+                  margin={{ top: 0, bottom: 0, left: 38, right: 0 }}
+                >
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 10 }}
+                    domain={[0, "dataMax"]}
+                  />
+                  <Bar dataKey="count" fill="transparent" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        ) : (
+          <div>No rules available</div>
+        )}
+      </div>
+    );
+  };
+
+  const DonutTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const name = payload[0].name || label;
+      return (
+        <div className="donut-tooltip">
+          <p className="donut-tooltip-title">{name}</p>
+          <p className="donut-tooltip-value">
+            Count: {payload[0].value}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  CustomTooltip.propTypes = {
+    entity: PropTypes.shape({
+      rules: PropTypes.arrayOf(
+        PropTypes.shape({
+          name: PropTypes.string.isRequired,
+          count: PropTypes.number.isRequired,
+        })
+      ),
+      name: PropTypes.string,
+    }),
+    payload: PropTypes.arrayOf(
+      PropTypes.shape({
+        value: PropTypes.number,
+      })
+    ),
+    label: PropTypes.string,
+    onClose: PropTypes.func.isRequired,
+    tooltipX: PropTypes.number.isRequired,
+    tooltipY: PropTypes.number.isRequired,
+  };
+
+  function filterEntitiesSummary(searchTerm) {
+    if (!searchTerm.trim()) return dummyData.entities_summary;
+
+    const term = searchTerm.toLowerCase();
+
+    return dummyData.entities_summary
+      .map((entity) => {
+        const entityMatch = entity.name.toLowerCase().includes(term);
+        if (entityMatch) {
+          return entity;
+        }
+
+        const matchedRules = entity.metrics.rules.filter((rule) =>
+          rule.name.toLowerCase().includes(term)
+        );
+
+        if (matchedRules.length > 0) {
+          return {
+            ...entity,
+            metrics: {
+              ...entity.metrics,
+              rules: matchedRules,
+            },
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+  }
+
+  const getBarData = () => {
+    if (selectedDimension && !selectedStatus) {
+      const dimension = dummyData.quality_dimensions_summary.find(
+        (d) => d.name === selectedDimension
+      );
+      if (!dimension) return [];
+
+      const entities = filterEntitiesSummary(searchTerm);
+      const filteredEntities = entities.filter((entity) => 
+        entity.metrics.count.pass === dimension.metrics.count.pass
+      );
+
+      return filteredEntities.map((entity) => ({
+        name: entity.name,
+        count: entity.metrics.count.pass,
+        rules: entity.metrics.rules,
+      }));
+    }
+
+    if (selectedDimension && selectedStatus) {
+      const dimension = dummyData.quality_dimensions_summary.find(
+        (d) => d.name === selectedDimension
+      );
+      if (!dimension) return [];
+      const entities = filterEntitiesSummary(searchTerm);
+      const filteredEntities = entities.filter((entity) => 
+        entity.metrics.count[selectedStatus] === dimension.metrics.count[selectedStatus]
+      );
+
+      return filteredEntities.map((entity) => ({
+        name: entity.name,
+        count: entity.metrics.count[selectedStatus],
+        rules: entity.metrics.rules,
+      }));
+    }
+
+    const entities = filterEntitiesSummary(searchTerm);
+    const status = selectedStatus || "pass";
+    return entities.map((entity) => ({
+      name: entity.name,
+      count: entity.metrics.count[status],
+      rules: entity.metrics.rules,
+    }));
+  };
+
+  const getMetricsData = () =>
+    dummyData.quality_dimensions_summary.map((qd) => ({
+      name: qd.name,
+      value: qd.metrics.count[selectedStatus || "pass"],
+    }));
+
+  const getOverallScoreData = () =>
+    ["pass", "fail", "error"].map((key) => ({
+      name: key.charAt(0).toUpperCase() + key.slice(1),
+      value: dummyData.overall_summary.metrics.count[key],
+      key,
+    }));
+
+  // Calculate quality score for each entity
+  const calculateQualityScore = (entity) => {
+    const total = entity.metrics.count.pass + entity.metrics.count.fail + entity.metrics.count.error;
+    if (total === 0) return 0;
+    return Math.round((entity.metrics.count.pass / total) * 100);
+  };
+
+  // Get filtered and processed data for the data grid
+  const getDataGridData = () => {
+    let entities = filterEntitiesSummary(searchTerm);
+    
+    // Apply status filter - show only entities that have the selected status > 0
+    if (selectedStatus) {
+      entities = entities.filter(entity => 
+        entity.metrics.count[selectedStatus] > 0
+      );
+    }
+    
+    // Apply dimension filter if selected
+    if (selectedDimension) {
+      const dimension = dummyData.quality_dimensions_summary.find(
+        (d) => d.name === selectedDimension
+      );
+      if (dimension) {
+        // Filter entities that have exactly the same metrics as the selected dimension
+        // For example, if Accuracy is selected with 1200 pass, show only entities with exactly 1200 pass
+        const status = selectedStatus || "pass";
+        const dimensionValue = dimension.metrics.count[status];
+        
+        // Show entities that have exactly the same metrics as the selected dimension
+        entities = entities.filter(entity => {
+          const entityValue = entity.metrics.count[status];
+          const isExactMatch = entityValue === dimensionValue;
+          return isExactMatch;
+        });
+      }
+    }
+
+    return entities.map(entity => ({
+      entity_name: entity.name,
+      total_rules: entity.metrics.rules.length,
+      success: entity.metrics.count.pass,
+      failure: entity.metrics.count.fail,
+      error: entity.metrics.count.error,
+      quality_score: calculateQualityScore(entity),
+      nested_data: generateNestedData(entity.name)
+    }));
+  };
+
+  // Generate nested data for each entity
+  const generateNestedData = (entityName) => {
+    const nestedDataMap = {
+      'Customer': [
+        { 
+          datasrc: 'customer', 
+          group_id: 'H704847', 
+          client_id: null, 
+          client_ds_id: 3147,
+          record_id: 'CUST_001',
+          created_date: '2024-01-15 09:30:00',
+          status: 'active',
+          email: 'john.doe@email.com',
+          phone: '+1-555-0123',
+          address: '123 Main St, City, State 12345',
+          last_updated: '2024-01-20 14:22:00',
+          data_quality_score: 95
+        },
+        { 
+          datasrc: 'customer', 
+          group_id: 'H704848', 
+          client_id: 'CL001', 
+          client_ds_id: 3148,
+          record_id: 'CUST_002',
+          created_date: '2024-01-16 11:15:00',
+          status: 'active',
+          email: 'jane.smith@email.com',
+          phone: '+1-555-0124',
+          address: '456 Oak Ave, City, State 12345',
+          last_updated: '2024-01-21 16:45:00',
+          data_quality_score: 88
+        },
+        { 
+          datasrc: 'customer', 
+          group_id: 'H704849', 
+          client_id: 'CL002', 
+          client_ds_id: 3149,
+          record_id: 'CUST_003',
+          created_date: '2024-01-17 13:45:00',
+          status: 'inactive',
+          email: 'bob.wilson@email.com',
+          phone: '+1-555-0125',
+          address: '789 Pine Rd, City, State 12345',
+          last_updated: '2024-01-19 10:30:00',
+          data_quality_score: 72
+        }
+      ],
+      'Order': [
+        { 
+          datasrc: 'order', 
+          group_id: 'O123456', 
+          client_i
