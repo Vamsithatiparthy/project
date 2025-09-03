@@ -743,4 +743,554 @@ const OverviewTab = () => {
       success: entity.metrics.count.pass,
       failure: entity.metrics.count.fail,
       error: entity.metrics.count.error,
-      quality_score: calculateQualit
+      quality_score: calculateQualityScore(entity),
+      nested_data: generateNestedData(entity.name)
+    }));
+  };
+
+  // Generate nested data for each entity
+  const generateNestedData = (entityName) => {
+    const nestedDataMap = {
+      'Customer': [
+        { 
+          datasrc: 'customer', 
+          group_id: 'H704847', 
+          client_id: null, 
+          client_ds_id: 3147,
+          record_id: 'CUST_001',
+          created_date: '2024-01-15 09:30:00',
+          status: 'active',
+          email: 'john.doe@email.com',
+          phone: '+1-555-0123',
+          address: '123 Main St, City, State 12345',
+          last_updated: '2024-01-20 14:22:00',
+          data_quality_score: 95
+        },
+        { 
+          datasrc: 'customer', 
+          group_id: 'H704848', 
+          client_id: 'CL001', 
+          client_ds_id: 3148,
+          record_id: 'CUST_002',
+          created_date: '2024-01-16 11:15:00',
+          status: 'active',
+          email: 'jane.smith@email.com',
+          phone: '+1-555-0124',
+          address: '456 Oak Ave, City, State 12345',
+          last_updated: '2024-01-21 16:45:00',
+          data_quality_score: 88
+        },
+        { 
+          datasrc: 'customer', 
+          group_id: 'H704849', 
+          client_id: 'CL002', 
+          client_ds_id: 3149,
+          record_id: 'CUST_003',
+          created_date: '2024-01-17 13:45:00',
+          status: 'inactive',
+          email: 'bob.wilson@email.com',
+          phone: '+1-555-0125',
+          address: '789 Pine Rd, City, State 12345',
+          last_updated: '2024-01-19 10:30:00',
+          data_quality_score: 72
+        }
+      ],
+      'Order': [
+        { 
+          datasrc: 'order', 
+          group_id: 'O123456', 
+          client_id: 'CL001', 
+          client_ds_id: 2156,
+          record_id: 'ORD_001',
+          order_date: '2024-01-20 08:00:00',
+          status: 'completed',
+          total_amount: 299.99,
+          currency: 'USD',
+          payment_method: 'credit_card',
+          shipping_address: '123 Main St, City, State 12345',
+          items_count: 3,
+          last_updated: '2024-01-22 15:30:00'
+        },
+        { 
+          datasrc: 'order', 
+          group_id: 'O123457', 
+          client_id: 'CL002', 
+          client_ds_id: 2157,
+          record_id: 'ORD_002',
+          order_date: '2024-01-21 10:30:00',
+          status: 'processing',
+          total_amount: 149.50,
+          currency: 'USD',
+          payment_method: 'paypal',
+          shipping_address: '456 Oak Ave, City, State 12345',
+          items_count: 2,
+          last_updated: '2024-01-22 09:15:00'
+        },
+        { 
+          datasrc: 'order', 
+          group_id: 'O123458', 
+          client_id: 'CL003', 
+          client_ds_id: 2158,
+          record_id: 'ORD_003',
+          order_date: '2024-01-22 14:20:00',
+          status: 'pending',
+          total_amount: 89.99,
+          currency: 'USD',
+          payment_method: 'bank_transfer',
+          shipping_address: '789 Pine Rd, City, State 12345',
+          items_count: 1,
+          last_updated: '2024-01-22 16:45:00'
+        }
+      ],
+      'Product': [
+        { 
+          datasrc: 'product', 
+          group_id: 'P789012', 
+          client_id: 'CL001', 
+          client_ds_id: 1890,
+          record_id: 'PROD_001',
+          product_name: 'Laptop Computer',
+          category: 'Electronics',
+          price: 999.99,
+          currency: 'USD',
+          stock_quantity: 25,
+          supplier: 'TechCorp Inc',
+          sku: 'LAPTOP-001',
+          weight: '2.5 kg',
+          dimensions: '35 x 25 x 2 cm',
+          last_updated: '2024-01-22 12:00:00'
+        },
+        { 
+          datasrc: 'product', 
+          group_id: 'P789013', 
+          client_id: 'CL002', 
+          client_ds_id: 1891,
+          record_id: 'PROD_002',
+          product_name: 'Wireless Mouse',
+          category: 'Accessories',
+          price: 29.99,
+          currency: 'USD',
+          stock_quantity: 150,
+          supplier: 'AccessoryWorld',
+          sku: 'MOUSE-001',
+          weight: '0.1 kg',
+          dimensions: '12 x 6 x 4 cm',
+          last_updated: '2024-01-22 11:30:00'
+        },
+        { 
+          datasrc: 'product', 
+          group_id: 'P789014', 
+          client_id: 'CL003', 
+          client_ds_id: 1892,
+          record_id: 'PROD_003',
+          product_name: 'USB Cable',
+          category: 'Cables',
+          price: 9.99,
+          currency: 'USD',
+          stock_quantity: 500,
+          supplier: 'CableCo',
+          sku: 'CABLE-001',
+          weight: '0.05 kg',
+          dimensions: '100 x 0.5 x 0.5 cm',
+          last_updated: '2024-01-22 10:15:00'
+        }
+      ],
+      'Invoice': [
+        { 
+          datasrc: 'invoice', 
+          group_id: 'I456789', 
+          client_id: 'CL001', 
+          client_ds_id: 3456,
+          record_id: 'INV_001',
+          invoice_date: '2024-01-20 00:00:00',
+          due_date: '2024-02-20 00:00:00',
+          status: 'paid',
+          total_amount: 299.99,
+          tax_amount: 24.99,
+          currency: 'USD',
+          payment_terms: 'Net 30',
+          billing_address: '123 Main St, City, State 12345',
+          last_updated: '2024-01-22 15:30:00'
+        },
+        { 
+          datasrc: 'invoice', 
+          group_id: 'I456790', 
+          client_id: 'CL002', 
+          client_ds_id: 3457,
+          record_id: 'INV_002',
+          invoice_date: '2024-01-21 00:00:00',
+          due_date: '2024-02-21 00:00:00',
+          status: 'pending',
+          total_amount: 149.50,
+          tax_amount: 12.45,
+          currency: 'USD',
+          payment_terms: 'Net 30',
+          billing_address: '456 Oak Ave, City, State 12345',
+          last_updated: '2024-01-22 09:15:00'
+        },
+        { 
+          datasrc: 'invoice', 
+          group_id: 'I456791', 
+          client_id: 'CL003', 
+          client_ds_id: 3458,
+          record_id: 'INV_003',
+          invoice_date: '2024-01-22 00:00:00',
+          due_date: '2024-02-22 00:00:00',
+          status: 'draft',
+          total_amount: 89.99,
+          tax_amount: 7.50,
+          currency: 'USD',
+          payment_terms: 'Net 30',
+          billing_address: '789 Pine Rd, City, State 12345',
+          last_updated: '2024-01-22 16:45:00'
+        }
+      ],
+      'Shipment': [
+        { 
+          datasrc: 'shipment', 
+          group_id: 'S234567', 
+          client_id: 'CL001', 
+          client_ds_id: 1234,
+          record_id: 'SHIP_001',
+          shipment_date: '2024-01-21 09:00:00',
+          status: 'delivered',
+          tracking_number: 'TRK123456789',
+          carrier: 'FedEx',
+          service_type: 'Express',
+          weight: '3.2 kg',
+          dimensions: '40 x 30 x 20 cm',
+          delivery_date: '2024-01-22 14:30:00',
+          last_updated: '2024-01-22 15:00:00'
+        },
+        { 
+          datasrc: 'shipment', 
+          group_id: 'S234568', 
+          client_id: 'CL002', 
+          client_ds_id: 1235,
+          record_id: 'SHIP_002',
+          shipment_date: '2024-01-22 10:00:00',
+          status: 'in_transit',
+          tracking_number: 'TRK987654321',
+          carrier: 'UPS',
+          service_type: 'Ground',
+          weight: '1.8 kg',
+          dimensions: '25 x 20 x 15 cm',
+          estimated_delivery: '2024-01-25 17:00:00',
+          last_updated: '2024-01-22 16:00:00'
+        },
+        { 
+          datasrc: 'shipment', 
+          group_id: 'S234569', 
+          client_id: 'CL003', 
+          client_ds_id: 1236,
+          record_id: 'SHIP_003',
+          shipment_date: '2024-01-22 14:00:00',
+          status: 'pending',
+          tracking_number: 'TRK456789123',
+          carrier: 'USPS',
+          service_type: 'Priority',
+          weight: '0.5 kg',
+          dimensions: '15 x 10 x 5 cm',
+          estimated_delivery: '2024-01-24 12:00:00',
+          last_updated: '2024-01-22 16:30:00'
+        }
+      ]
+    };
+
+    // For other entities, generate generic granular nested data
+    if (!nestedDataMap[entityName]) {
+      return [
+        { 
+          datasrc: entityName.toLowerCase(), 
+          group_id: `${entityName.charAt(0)}001`, 
+          client_id: 'CL001', 
+          client_ds_id: Math.floor(Math.random() * 9000) + 1000,
+          record_id: `${entityName.charAt(0)}_001`,
+          created_date: '2024-01-20 10:00:00',
+          status: 'active',
+          last_updated: '2024-01-22 12:00:00',
+          data_quality_score: Math.floor(Math.random() * 30) + 70
+        },
+        { 
+          datasrc: entityName.toLowerCase(), 
+          group_id: `${entityName.charAt(0)}002`, 
+          client_id: 'CL002', 
+          client_ds_id: Math.floor(Math.random() * 9000) + 1000,
+          record_id: `${entityName.charAt(0)}_002`,
+          created_date: '2024-01-21 11:00:00',
+          status: 'active',
+          last_updated: '2024-01-22 13:00:00',
+          data_quality_score: Math.floor(Math.random() * 30) + 70
+        },
+        { 
+          datasrc: entityName.toLowerCase(), 
+          group_id: `${entityName.charAt(0)}003`, 
+          client_id: 'CL003', 
+          client_ds_id: Math.floor(Math.random() * 9000) + 1000,
+          record_id: `${entityName.charAt(0)}_003`,
+          created_date: '2024-01-22 12:00:00',
+          status: 'inactive',
+          last_updated: '2024-01-22 14:00:00',
+          data_quality_score: Math.floor(Math.random() * 30) + 70
+        }
+      ];
+    }
+
+    return nestedDataMap[entityName];
+  };
+
+  // State for expanded rows
+  const [expandedRows, setExpandedRows] = useState(new Set());
+
+  // Toggle row expansion
+  const toggleRowExpansion = (entityName) => {
+    const newExpandedRows = new Set(expandedRows);
+    if (newExpandedRows.has(entityName)) {
+      newExpandedRows.delete(entityName);
+    } else {
+      newExpandedRows.add(entityName);
+    }
+    setExpandedRows(newExpandedRows);
+  };
+
+  // Calculate dynamic table height based on number of results
+  const getTableHeight = () => {
+    const dataLength = getDataGridData().length;
+    const rowHeight = 40; // Further reduced row height
+    const headerHeight = 40; // Further reduced header height
+    const minHeight = 120; // Further reduced minimum height
+    const maxHeight = 350; // Further reduced maximum height
+    
+    if (dataLength === 0) return minHeight;
+    
+    const calculatedHeight = headerHeight + (dataLength * rowHeight);
+    return Math.min(Math.max(calculatedHeight, minHeight), maxHeight);
+  };
+
+  // Build hierarchical data for abyss DataTable using subRows
+  const buildHierarchyData = () => {
+    // Start from same filtered base as grid
+    let entities = filterEntitiesSummary(searchTerm);
+    if (selectedStatus) {
+      entities = entities.filter(entity => entity.metrics.count[selectedStatus] > 0);
+    }
+    if (selectedDimension) {
+      const dimension = dummyData.quality_dimensions_summary.find((d) => d.name === selectedDimension);
+      if (dimension) {
+        const status = selectedStatus || 'pass';
+        const dimensionValue = dimension.metrics.count[status];
+        entities = entities.filter(entity => entity.metrics.count[status] === dimensionValue);
+      }
+    }
+
+    // Flatten nested_data rows across entities
+    const rows = [];
+    for (const e of entities) {
+      const nd = generateNestedData(e.name) || [];
+      for (const r of nd) rows.push(r);
+    }
+
+    // datasrc -> group_id -> client_id -> client_ds_id aggregation counts
+    const byDatasrc = new Map();
+    for (const r of rows) {
+      const ds = r.datasrc ?? 'unknown';
+      const g = r.group_id ?? 'null';
+      const c = r.client_id ?? 'null';
+      const cds = r.client_ds_id ?? 'null';
+
+      const dsNode = byDatasrc.get(ds) ?? { col1: `datasrc: ${ds}`, col2: 0, subRows: [], _groups: new Map() };
+      byDatasrc.set(ds, dsNode);
+      dsNode.col2 += 1; // count of group rows
+
+      const gNode = dsNode._groups.get(g) ?? { col1: `group_id: ${g}`, col2: 0, subRows: [], _clients: new Map() };
+      dsNode._groups.set(g, gNode);
+      gNode.col2 += 1; // count of client rows
+
+      const cNode = gNode._clients.get(c) ?? { col1: `client_id: ${c}`, col2: 0, subRows: [], _clientds: new Map() };
+      gNode._clients.set(c, cNode);
+      cNode.col2 += 1; // count of client_ds rows
+
+      const cdsNode = cNode._clientds.get(cds) ?? { col1: `client_ds_id: ${cds}`, col2: 0 };
+      cNode._clientds.set(cds, cdsNode);
+      cdsNode.col2 += 1; // leaf count
+    }
+
+    const materialize = (node) => {
+      if (node._groups) {
+        node.subRows = Array.from(node._groups.values()).map(materialize);
+        delete node._groups;
+      }
+      if (node._clients) {
+        node.subRows = Array.from(node._clients.values()).map(materialize);
+        delete node._clients;
+      }
+      if (node._clientds) {
+        node.subRows = Array.from(node._clientds.values());
+        delete node._clientds;
+      }
+      return node;
+    };
+
+    return Array.from(byDatasrc.values()).map(materialize);
+  };
+
+  const abyssColumns = [
+    { accessorKey: 'col1', header: 'Label' },
+    { accessorKey: 'col2', header: 'Count' },
+  ];
+
+  const abyssTableState = useDataTable({
+    initialData: buildHierarchyData(),
+    initialColumns: abyssColumns,
+    showExpansion: true,
+  });
+
+  return (
+    <div className="summary-tab-container">
+      <div className="summary-content">
+        <div className="filters-sidebar">
+          {/* Overall Status Filter */}
+          <div className="filter-section">
+            <div className="donut-chart-block">
+              <div style={{ width: '100%' }}>
+                <Charts.Donut
+                  data={getAbyssOverallDonut()}
+                  title="Overall"
+                  subtitle="Pass/Fail/Error"
+                  xAxisLabel="Status"
+                  yAxisLabel="Count"
+                />
+              </div>
+              <div className="donut-labels">
+                {getOverallScoreData().map((entry) => (
+                  <div
+                    key={entry.key}
+                    className={`donut-label ${
+                      selectedStatus === entry.key ? "active" : ""
+                    }`}
+                    onClick={() => setSelectedStatus(entry.key)}
+                  >
+                    <span style={{ backgroundColor: COLORS[entry.key] }}></span>
+                    {entry.name}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Quality Dimensions Filter */}
+          <div className="filter-section">
+            <div className="donut-chart-block">
+              <div style={{ width: '100%' }}>
+                <Charts.Donut
+                  data={getAbyssMetricsDonut()}
+                  title="Quality Dimensions"
+                  subtitle="Count by dimension"
+                  xAxisLabel="Dimension"
+                  yAxisLabel="Count"
+                />
+              </div>
+              <div className="donut-labels">
+                {dummyData.quality_dimensions_summary.map((entry) => (
+                  <div
+                    key={entry.name}
+                    className={`donut-label ${
+                      selectedDimension === entry.name ? "active" : ""
+                    }`}
+                    onClick={() => setSelectedDimension(entry.name)}
+                  >
+                    <span
+                      style={{ backgroundColor: COLORS[entry.name] }}
+                    ></span>
+                    {entry.name}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Center - Data Grid replaced by Abyss DataTable */}
+        <div className="bar-chart-section">
+          <div className="summary-header">
+            <div className="search-container">
+              <FaSearch className="search-icon" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search entities or rules..."
+                className="search-input"
+              />
+            </div>
+
+            <div className="filter-status">
+              {selectedStatus && (
+                <span className="active-filter">
+                  Status:{" "}
+                  {selectedStatus.charAt(0).toUpperCase() +
+                    selectedStatus.slice(1)}
+                </span>
+              )}
+              {selectedDimension && (
+                <span className="active-filter">
+                  Dimension: {selectedDimension}
+                </span>
+              )}
+            </div>
+
+            <button className="reset-button" onClick={handleReset}>
+              Reset
+            </button>
+          </div>
+
+          <div className="data-summary">
+            <div className="summary-stats">
+              <span className="stat-item">
+                <strong>Total Entities:</strong> {getDataGridData().length}
+              </span>
+              {getDataGridData().length > 0 && (
+                <>
+                  <span className="stat-item">
+                    <strong>Total Rules:</strong>{" "}
+                    {getDataGridData().reduce(
+                      (sum, entity) => sum + entity.total_rules,
+                      0
+                    )}
+                  </span>
+                  <span className="stat-item">
+                    <strong>Avg Quality Score:</strong>{" "}
+                    {Math.round(
+                      getDataGridData().reduce(
+                        (sum, entity) => sum + entity.quality_score,
+                        0
+                      ) / getDataGridData().length
+                    )}
+                    %
+                  </span>
+                </>
+              )}
+            </div>
+            {(selectedStatus || selectedDimension) && (
+              <div className="filter-info">
+                <strong>Currently showing:</strong>
+                {selectedStatus &&
+                  ` Status: ${
+                    selectedStatus.charAt(0).toUpperCase() +
+                    selectedStatus.slice(1)
+                  }`}
+                {selectedStatus && selectedDimension && " and "}
+                {selectedDimension && ` Dimension: ${selectedDimension}`}
+              </div>
+            )}
+          </div>
+
+          <div className="entity-table-scroll-box" style={{ maxHeight: `${getTableHeight()}px` }}>
+            <DataTable title="Expansion Rows" tableState={abyssTableState} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+export default OverviewTab;
