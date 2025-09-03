@@ -1,0 +1,1337 @@
+import React, { useEffect, useRef,useState } from "react";
+import { FaSearch } from "react-icons/fa";
+import PropTypes from "prop-types";
+import { DataTable } from '@abyss/web/ui/DataTable';
+import { useDataTable } from '@abyss/web/hooks/useDataTable';
+import { Charts } from '@abyss/web/ui/Charts';
+import {
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import "../../styles/scss/_overview_tab.scss";
+// import './App.css';
+const dummyData = {
+  overall_summary: {
+    metrics: {
+      count: {
+        pass: 1200,
+        fail: 300,
+        error: 50,
+      },
+    },
+    // Abyss-friendly rows for overall summary
+    abyss_rows: [
+      { col1: 'Pass', col2: 1200 },
+      { col1: 'Fail', col2: 300 },
+      { col1: 'Error', col2: 50 },
+    ],
+  },
+  quality_dimensions_summary: [
+    {
+      name: "Accuracy",
+      metrics: { count: { pass: 1200, fail: 300, error: 50 } },
+      // default abyss row uses current status 'pass' by default
+      abyss_row: { col1: 'Accuracy', col2: 1200 },
+    },
+    {
+      name: "Completeness",
+      metrics: { count: { pass: 1100, fail: 250, error: 30 } },
+      abyss_row: { col1: 'Completeness', col2: 1100 },
+    },
+    {
+      name: "Reliability",
+      metrics: { count: { pass: 1000, fail: 200, error: 20 } },
+      abyss_row: { col1: 'Reliability', col2: 1000 },
+    },
+    {
+      name: "Timeliness",
+      metrics: { count: { pass: 950, fail: 180, error: 25 } },
+      abyss_row: { col1: 'Timeliness', col2: 950 },
+    },
+    {
+      name: "Consistency",
+      metrics: { count: { pass: 900, fail: 150, error: 20 } },
+      abyss_row: { col1: 'Consistency', col2: 900 },
+    },
+  ],
+  entities_summary: [
+    {
+      name: "Customer",
+      metrics: {
+        count: { pass: 1200, fail: 300, error: 50 },
+        rules: [
+          { name: "Rule X", count: 400 },
+          { name: "Rule Y", count: 500 },
+          { name: "Rule Z", count: 300 },
+        ],
+      },
+      // convenience abyss row for entity-level totals (default status pass)
+      abyss_row: { col1: 'Customer', col2: 1200 },
+    },
+    {
+      name: "Order",
+      metrics: {
+        count: { pass: 1000, fail: 200, error: 30 },
+        rules: [
+          { name: "Rule A", count: 600 },
+          { name: "Rule B", count: 400 },
+        ],
+      },
+      abyss_row: { col1: 'Order', col2: 1000 },
+    },
+    {
+      name: "Product",
+      metrics: {
+        count: { pass: 950, fail: 180, error: 25 },
+        rules: [
+          { name: "Rule 1", count: 300 },
+          { name: "Rule 2", count: 350 },
+          { name: "Rule 3", count: 300 },
+        ],
+      },
+      abyss_row: { col1: 'Product', col2: 950 },
+    },
+    {
+      name: "Invoice",
+      metrics: {
+        count: { pass: 900, fail: 150, error: 20 },
+        rules: [
+          { name: "Rule 1", count: 100 },
+          { name: "Rule 2", count: 100 },
+          { name: "Rule 3", count: 100 },
+          { name: "Rule 4", count: 100 },
+          { name: "Rule 5", count: 100 },
+          { name: "Rule 6", count: 100 },
+          { name: "Rule 7", count: 100 },
+          { name: "Rule 8", count: 100 },
+          { name: "Rule 9", count: 100 },
+        ],
+      },
+      abyss_row: { col1: 'Invoice', col2: 900 },
+    },
+    {
+      name: "Shipment",
+      metrics: {
+        count: { pass: 850, fail: 140, error: 15 },
+        rules: [
+          { name: "Rule A", count: 400 },
+          { name: "Rule B", count: 250 },
+          { name: "Rule C", count: 200 },
+        ],
+      },
+      abyss_row: { col1: 'Shipment', col2: 850 },
+    },
+    {
+      name: "Payment",
+      metrics: {
+        count: { pass: 800, fail: 130, error: 10 },
+        rules: [
+          { name: "Rule 1", count: 500 },
+          { name: "Rule 2", count: 300 },
+        ],
+      },
+      abyss_row: { col1: 'Payment', col2: 800 },
+    },
+    {
+      name: "Supplier",
+      metrics: {
+        count: { pass: 750, fail: 120, error: 10 },
+        rules: [
+          { name: "Rule X", count: 250 },
+          { name: "Rule Y", count: 300 },
+          { name: "Rule Z", count: 200 },
+        ],
+      },
+      abyss_row: { col1: 'Supplier', col2: 750 },
+    },
+    {
+      name: "Warehouse",
+      metrics: {
+        count: { pass: 700, fail: 110, error: 5 },
+        rules: [
+          { name: "Rule W", count: 300 },
+          { name: "Rule E", count: 250 },
+          { name: "Rule R", count: 150 },
+        ],
+      },
+      abyss_row: { col1: 'Warehouse', col2: 700 },
+    },
+    {
+      name: "Inventory",
+      metrics: {
+        count: { pass: 650, fail: 100, error: 8 },
+        rules: [
+          { name: "Rule I1", count: 200 },
+          { name: "Rule I2", count: 250 },
+          { name: "Rule I3", count: 200 },
+        ],
+      },
+      abyss_row: { col1: 'Inventory', col2: 650 },
+    },
+    {
+      name: "Transaction",
+      metrics: {
+        count: { pass: 600, fail: 90, error: 12 },
+        rules: [
+          { name: "Rule T1", count: 300 },
+          { name: "Rule T2", count: 200 },
+          { name: "Rule T3", count: 100 },
+        ],
+      },
+      abyss_row: { col1: 'Transaction', col2: 600 },
+    },
+    {
+      name: "User",
+      metrics: {
+        count: { pass: 550, fail: 80, error: 15 },
+        rules: [
+          { name: "Rule U1", count: 200 },
+          { name: "Rule U2", count: 200 },
+          { name: "Rule U3", count: 150 },
+        ],
+      },
+      abyss_row: { col1: 'User', col2: 550 },
+    },
+    {
+      name: "Account",
+      metrics: {
+        count: { pass: 500, fail: 70, error: 18 },
+        rules: [
+          { name: "Rule A1", count: 150 },
+          { name: "Rule A2", count: 200 },
+          { name: "Rule A3", count: 150 },
+        ],
+      },
+      abyss_row: { col1: 'Account', col2: 500 },
+    },
+    {
+      name: "Category",
+      metrics: {
+        count: { pass: 450, fail: 60, error: 20 },
+        rules: [
+          { name: "Rule C1", count: 100 },
+          { name: "Rule C2", count: 150 },
+          { name: "Rule C3", count: 200 },
+        ],
+      },
+      abyss_row: { col1: 'Category', col2: 450 },
+    },
+    {
+      name: "Tag",
+      metrics: {
+        count: { pass: 400, fail: 50, error: 22 },
+        rules: [
+          { name: "Rule T1", count: 120 },
+          { name: "Rule T2", count: 150 },
+          { name: "Rule T3", count: 130 },
+        ],
+      },
+      abyss_row: { col1: 'Tag', col2: 400 },
+    },
+    {
+      name: "Comment",
+      metrics: {
+        count: { pass: 350, fail: 40, error: 25 },
+        rules: [
+          { name: "Rule C1", count: 100 },
+          { name: "Rule C2", count: 150 },
+          { name: "Rule C3", count: 100 },
+        ],
+      },
+      abyss_row: { col1: 'Comment', col2: 350 },
+    },
+    {
+      name: "Review",
+      metrics: {
+        count: { pass: 300, fail: 35, error: 28 },
+        rules: [
+          { name: "Rule R1", count: 80 },
+          { name: "Rule R2", count: 120 },
+          { name: "Rule R3", count: 100 },
+        ],
+      },
+      abyss_row: { col1: 'Review', col2: 300 },
+    },
+    {
+      name: "Rating",
+      metrics: {
+        count: { pass: 250, fail: 30, error: 30 },
+        rules: [
+          { name: "Rule R1", count: 70 },
+          { name: "Rule R2", count: 100 },
+          { name: "Rule R3", count: 80 },
+        ],
+      },
+      abyss_row: { col1: 'Rating', col2: 250 },
+    },
+    {
+      name: "Notification",
+      metrics: {
+        count: { pass: 200, fail: 25, error: 32 },
+        rules: [
+          { name: "Rule N1", count: 60 },
+          { name: "Rule N2", count: 80 },
+          { name: "Rule N3", count: 60 },
+        ],
+      },
+      abyss_row: { col1: 'Notification', col2: 200 },
+    },
+    {
+      name: "Message",
+      metrics: {
+        count: { pass: 150, fail: 20, error: 35 },
+        rules: [
+          { name: "Rule M1", count: 50 },
+          { name: "Rule M2", count: 60 },
+          { name: "Rule M3", count: 40 },
+        ],
+      },
+      abyss_row: { col1: 'Message', col2: 150 },
+    },
+    {
+      name: "Log",
+      metrics: {
+        count: { pass: 100, fail: 15, error: 40 },
+        rules: [
+          { name: "Rule L1", count: 30 },
+          { name: "Rule L2", count: 40 },
+          { name: "Rule L3", count: 30 },
+        ],
+      },
+      abyss_row: { col1: 'Log', col2: 100 },
+    },
+    {
+      name: "Audit",
+      metrics: {
+        count: { pass: 80, fail: 12, error: 45 },
+        rules: [
+          { name: "Rule A1", count: 25 },
+          { name: "Rule A2", count: 30 },
+          { name: "Rule A3", count: 25 },
+        ],
+      },
+      abyss_row: { col1: 'Audit', col2: 80 },
+    },
+    {
+      name: "Backup",
+      metrics: {
+        count: { pass: 60, fail: 10, error: 50 },
+        rules: [
+          { name: "Rule B1", count: 20 },
+          { name: "Rule B2", count: 25 },
+          { name: "Rule B3", count: 15 },
+        ],
+      },
+      abyss_row: { col1: 'Backup', col2: 60 },
+    },
+    {
+      name: "Archive",
+      metrics: {
+        count: { pass: 40, fail: 8, error: 55 },
+        rules: [
+          { name: "Rule A1", count: 15 },
+          { name: "Rule A2", count: 20 },
+          { name: "Rule A3", count: 5 },
+        ],
+      },
+      abyss_row: { col1: 'Archive', col2: 40 },
+    },
+    {
+      name: "Cache",
+      metrics: {
+        count: { pass: 30, fail: 5, error: 60 },
+        rules: [
+          { name: "Rule C1", count: 10 },
+          { name: "Rule C2", count: 15 },
+          { name: "Rule C3", count: 5 },
+        ],
+      },
+      abyss_row: { col1: 'Cache', col2: 30 },
+    },
+    {
+      name: "Session",
+      metrics: {
+        count: { pass: 25, fail: 4, error: 65 },
+        rules: [
+          { name: "Rule S1", count: 8 },
+          { name: "Rule S2", count: 12 },
+          { name: "Rule S3", count: 5 },
+        ],
+      },
+      abyss_row: { col1: 'Session', col2: 25 },
+    },
+    {
+      name: "Token",
+      metrics: {
+        count: { pass: 20, fail: 3, error: 70 },
+        rules: [
+          { name: "Rule T1", count: 6 },
+          { name: "Rule T2", count: 10 },
+          { name: "Rule T3", count: 4 },
+        ],
+      },
+      abyss_row: { col1: 'Token', col2: 20 },
+    },
+    {
+      name: "Key",
+      metrics: {
+        count: { pass: 15, fail: 2, error: 75 },
+        rules: [
+          { name: "Rule K1", count: 5 },
+          { name: "Rule K2", count: 7 },
+          { name: "Rule K3", count: 3 },
+        ],
+      },
+      abyss_row: { col1: 'Key', col2: 15 },
+    },
+    {
+      name: "Secret",
+      metrics: {
+        count: { pass: 10, fail: 1, error: 80 },
+        rules: [
+          { name: "Rule S1", count: 3 },
+          { name: "Rule S2", count: 5 },
+          { name: "Rule S3", count: 2 },
+        ],
+      },
+      abyss_row: { col1: 'Secret', col2: 10 },
+    },
+  ],
+};
+
+const COLORS = {
+  pass: "#61D661",
+  fail: "#C40000",
+  error: "#B1B2B4",
+  Accuracy: "#15A796",
+  Completeness: "#C72887",
+  Reliability: "#8061BC",
+  Timeliness: "#E4780C",
+  Consistency: "#1E82CB",
+};
+
+const OverviewTab = () => {
+  const [selectedStatus, setSelectedStatus] = useState(null);
+  const [selectedDimension, setSelectedDimension] = useState(null);
+  const [tooltipX, setTooltipX] = useState(0);
+  const [tooltipY, setTooltipY] = useState(0);
+  const [selectedEntity, setSelectedEntity] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const tooltipRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+        setSelectedEntity(null);
+      }
+    };
+
+    if (selectedEntity) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [selectedEntity]);
+
+  const handleReset = () => {
+    setSelectedStatus(null);
+    setSelectedDimension(null);
+  };
+
+  const CustomTooltip = ({
+    entity,
+    payload,
+    label,
+    onClose,
+    tooltipX,
+    tooltipY,
+  }) => {
+    if (!entity) return null;
+    const rules = entity.rules || [];
+
+    const getTooltipPosition = () => {
+      const tooltipWidth = 250;
+      const tooltipHeight = rules.length > 0 ? 350 : 80;
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+
+      let x = tooltipX + 10;
+      let y = tooltipY + 10;
+
+      if (x + tooltipWidth > windowWidth - 20) {
+        x = tooltipX - tooltipWidth - 10;
+      }
+
+      if (y + tooltipHeight > windowHeight - 20) {
+        y = tooltipY - tooltipHeight - 10;
+      }
+
+      if (y < 20) {
+        y = 20;
+      }
+
+      if (x < 20) {
+        x = 20;
+      }
+
+      return { x, y };
+    };
+
+    const position = getTooltipPosition();
+
+    return (
+      <div
+        ref={tooltipRef}
+        className="tooltip-container"
+        style={{
+          top: position.y,
+          left: position.x,
+        }}
+      >
+        <div className="tooltip-header-container">
+          <div>
+            <strong>{label}</strong>
+            <br />
+            Total: {payload?.[0]?.value ?? 0}
+          </div>
+          <button
+            onClick={onClose}
+            className="tooltip-close-button"
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+        {rules.length > 0 ? (
+          <div className="tooltip-content">
+            <div className="tooltip-chart-container">
+              <ResponsiveContainer
+                width="100%"
+                height={Math.max(rules.length * 35, 100)}
+              >
+                <BarChart
+                  data={rules}
+                  layout="vertical"
+                  margin={{ top: 0, bottom: 0, left: -42, right: 20 }}
+                >
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 10 }}
+                    domain={[0, "dataMax"]}
+                    hide
+                  />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    width={80}
+                    tick={{ fontSize: 10 }}
+                  />
+                  <Tooltip cursor={false} />
+                  <Bar dataKey="count" fill="#8884d8" barSize={10} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="tooltip-xaxis-container">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={rules}
+                  layout="vertical"
+                  margin={{ top: 0, bottom: 0, left: 38, right: 0 }}
+                >
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 10 }}
+                    domain={[0, "dataMax"]}
+                  />
+                  <Bar dataKey="count" fill="transparent" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        ) : (
+          <div>No rules available</div>
+        )}
+      </div>
+    );
+  };
+
+  const DonutTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const name = payload[0].name || label;
+      return (
+        <div className="donut-tooltip">
+          <p className="donut-tooltip-title">{name}</p>
+          <p className="donut-tooltip-value">
+            Count: {payload[0].value}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  CustomTooltip.propTypes = {
+    entity: PropTypes.shape({
+      rules: PropTypes.arrayOf(
+        PropTypes.shape({
+          name: PropTypes.string.isRequired,
+          count: PropTypes.number.isRequired,
+        })
+      ),
+      name: PropTypes.string,
+    }),
+    payload: PropTypes.arrayOf(
+      PropTypes.shape({
+        value: PropTypes.number,
+      })
+    ),
+    label: PropTypes.string,
+    onClose: PropTypes.func.isRequired,
+    tooltipX: PropTypes.number.isRequired,
+    tooltipY: PropTypes.number.isRequired,
+  };
+
+  function filterEntitiesSummary(searchTerm) {
+    if (!searchTerm.trim()) return dummyData.entities_summary;
+
+    const term = searchTerm.toLowerCase();
+
+    return dummyData.entities_summary
+      .map((entity) => {
+        const entityMatch = entity.name.toLowerCase().includes(term);
+        if (entityMatch) {
+          return entity;
+        }
+
+        const matchedRules = entity.metrics.rules.filter((rule) =>
+          rule.name.toLowerCase().includes(term)
+        );
+
+        if (matchedRules.length > 0) {
+          return {
+            ...entity,
+            metrics: {
+              ...entity.metrics,
+              rules: matchedRules,
+            },
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+  }
+
+  const getBarData = () => {
+    if (selectedDimension && !selectedStatus) {
+      const dimension = dummyData.quality_dimensions_summary.find(
+        (d) => d.name === selectedDimension
+      );
+      if (!dimension) return [];
+
+      const entities = filterEntitiesSummary(searchTerm);
+      const filteredEntities = entities.filter((entity) => 
+        entity.metrics.count.pass === dimension.metrics.count.pass
+      );
+
+      return filteredEntities.map((entity) => ({
+        name: entity.name,
+        count: entity.metrics.count.pass,
+        rules: entity.metrics.rules,
+      }));
+    }
+
+    if (selectedDimension && selectedStatus) {
+      const dimension = dummyData.quality_dimensions_summary.find(
+        (d) => d.name === selectedDimension
+      );
+      if (!dimension) return [];
+      const entities = filterEntitiesSummary(searchTerm);
+      const filteredEntities = entities.filter((entity) => 
+        entity.metrics.count[selectedStatus] === dimension.metrics.count[selectedStatus]
+      );
+
+      return filteredEntities.map((entity) => ({
+        name: entity.name,
+        count: entity.metrics.count[selectedStatus],
+        rules: entity.metrics.rules,
+      }));
+    }
+
+    const entities = filterEntitiesSummary(searchTerm);
+    const status = selectedStatus || "pass";
+    return entities.map((entity) => ({
+      name: entity.name,
+      count: entity.metrics.count[status],
+      rules: entity.metrics.rules,
+    }));
+  };
+
+  const getMetricsData = () =>
+    dummyData.quality_dimensions_summary.map((qd) => ({
+      name: qd.name,
+      value: qd.metrics.count[selectedStatus || "pass"],
+    }));
+
+  const getOverallScoreData = () =>
+    ["pass", "fail", "error"].map((key) => ({
+      name: key.charAt(0).toUpperCase() + key.slice(1),
+      value: dummyData.overall_summary.metrics.count[key],
+      key,
+    }));
+
+  // Abyss Charts adapters
+  const getAbyssOverallDonut = () => {
+    const rows = getOverallScoreData();
+    const labels = rows.map(r => r.name);
+    const data = rows.map(r => r.value);
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Count',
+          data,
+          backgroundColor: [
+            '$primaryDvz1',
+            Charts.pattern.draw('line', '$secondaryDvz1'),
+            Charts.pattern.draw('diagonal', '$purpleDvz1'),
+          ],
+          borderColor: ['$primaryDvz1', '$secondaryDvz1', '$purpleDvz1'],
+        },
+      ],
+    };
+  };
+
+  const getAbyssMetricsDonut = () => {
+    const rows = dummyData.quality_dimensions_summary.map(qd => ({
+      name: qd.name,
+      value: qd.metrics.count[selectedStatus || 'pass'],
+    }));
+    const labels = rows.map(r => r.name);
+    const values = rows.map(r => r.value);
+    // Cycle a few themed colors/patterns
+    const fills = [
+      '$primaryDvz1',
+      Charts.pattern.draw('line', '$secondaryDvz1'),
+      Charts.pattern.draw('diagonal', '$purpleDvz1'),
+      Charts.pattern.draw('cross', '$orangeDvz1'),
+      Charts.pattern.draw('dot', '$tealDvz1'),
+    ];
+    const bg = values.map((_, i) => fills[i % fills.length]);
+    const borders = ['$primaryDvz1', '$secondaryDvz1', '$purpleDvz1', '$orangeDvz1', '$tealDvz1'];
+    const bc = values.map((_, i) => borders[i % borders.length]);
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Count',
+          data: values,
+          backgroundColor: bg,
+          borderColor: bc,
+        },
+      ],
+    };
+  };
+
+  // Calculate quality score for each entity
+  const calculateQualityScore = (entity) => {
+    const total = entity.metrics.count.pass + entity.metrics.count.fail + entity.metrics.count.error;
+    if (total === 0) return 0;
+    return Math.round((entity.metrics.count.pass / total) * 100);
+  };
+
+  // Get filtered and processed data for the data grid
+  const getDataGridData = () => {
+    let entities = filterEntitiesSummary(searchTerm);
+    
+    // Apply status filter - show only entities that have the selected status > 0
+    if (selectedStatus) {
+      entities = entities.filter(entity => 
+        entity.metrics.count[selectedStatus] > 0
+      );
+    }
+    
+    // Apply dimension filter if selected
+    if (selectedDimension) {
+      const dimension = dummyData.quality_dimensions_summary.find(
+        (d) => d.name === selectedDimension
+      );
+      if (dimension) {
+        // Filter entities that have exactly the same metrics as the selected dimension
+        // For example, if Accuracy is selected with 1200 pass, show only entities with exactly 1200 pass
+        const status = selectedStatus || "pass";
+        const dimensionValue = dimension.metrics.count[status];
+        
+        // Show entities that have exactly the same metrics as the selected dimension
+        entities = entities.filter(entity => {
+          const entityValue = entity.metrics.count[status];
+          const isExactMatch = entityValue === dimensionValue;
+          return isExactMatch;
+        });
+      }
+    }
+
+    return entities.map(entity => ({
+      entity_name: entity.name,
+      total_rules: entity.metrics.rules.length,
+      success: entity.metrics.count.pass,
+      failure: entity.metrics.count.fail,
+      error: entity.metrics.count.error,
+      quality_score: calculateQualityScore(entity),
+      nested_data: generateNestedData(entity.name)
+    }));
+  };
+
+  // Generate nested data for each entity
+  const generateNestedData = (entityName) => {
+    const nestedDataMap = {
+      'Customer': [
+        { 
+          datasrc: 'customer', 
+          group_id: 'H704847', 
+          client_id: null, 
+          client_ds_id: 3147,
+          record_id: 'CUST_001',
+          created_date: '2024-01-15 09:30:00',
+          status: 'active',
+          email: 'john.doe@email.com',
+          phone: '+1-555-0123',
+          address: '123 Main St, City, State 12345',
+          last_updated: '2024-01-20 14:22:00',
+          data_quality_score: 95
+        },
+        { 
+          datasrc: 'customer', 
+          group_id: 'H704848', 
+          client_id: 'CL001', 
+          client_ds_id: 3148,
+          record_id: 'CUST_002',
+          created_date: '2024-01-16 11:15:00',
+          status: 'active',
+          email: 'jane.smith@email.com',
+          phone: '+1-555-0124',
+          address: '456 Oak Ave, City, State 12345',
+          last_updated: '2024-01-21 16:45:00',
+          data_quality_score: 88
+        },
+        { 
+          datasrc: 'customer', 
+          group_id: 'H704849', 
+          client_id: 'CL002', 
+          client_ds_id: 3149,
+          record_id: 'CUST_003',
+          created_date: '2024-01-17 13:45:00',
+          status: 'inactive',
+          email: 'bob.wilson@email.com',
+          phone: '+1-555-0125',
+          address: '789 Pine Rd, City, State 12345',
+          last_updated: '2024-01-19 10:30:00',
+          data_quality_score: 72
+        }
+      ],
+      'Order': [
+        { 
+          datasrc: 'order', 
+          group_id: 'O123456', 
+          client_id: 'CL001', 
+          client_ds_id: 2156,
+          record_id: 'ORD_001',
+          order_date: '2024-01-20 08:00:00',
+          status: 'completed',
+          total_amount: 299.99,
+          currency: 'USD',
+          payment_method: 'credit_card',
+          shipping_address: '123 Main St, City, State 12345',
+          items_count: 3,
+          last_updated: '2024-01-22 15:30:00'
+        },
+        { 
+          datasrc: 'order', 
+          group_id: 'O123457', 
+          client_id: 'CL002', 
+          client_ds_id: 2157,
+          record_id: 'ORD_002',
+          order_date: '2024-01-21 10:30:00',
+          status: 'processing',
+          total_amount: 149.50,
+          currency: 'USD',
+          payment_method: 'paypal',
+          shipping_address: '456 Oak Ave, City, State 12345',
+          items_count: 2,
+          last_updated: '2024-01-22 09:15:00'
+        },
+        { 
+          datasrc: 'order', 
+          group_id: 'O123458', 
+          client_id: 'CL003', 
+          client_ds_id: 2158,
+          record_id: 'ORD_003',
+          order_date: '2024-01-22 14:20:00',
+          status: 'pending',
+          total_amount: 89.99,
+          currency: 'USD',
+          payment_method: 'bank_transfer',
+          shipping_address: '789 Pine Rd, City, State 12345',
+          items_count: 1,
+          last_updated: '2024-01-22 16:45:00'
+        }
+      ],
+      'Product': [
+        { 
+          datasrc: 'product', 
+          group_id: 'P789012', 
+          client_id: 'CL001', 
+          client_ds_id: 1890,
+          record_id: 'PROD_001',
+          product_name: 'Laptop Computer',
+          category: 'Electronics',
+          price: 999.99,
+          currency: 'USD',
+          stock_quantity: 25,
+          supplier: 'TechCorp Inc',
+          sku: 'LAPTOP-001',
+          weight: '2.5 kg',
+          dimensions: '35 x 25 x 2 cm',
+          last_updated: '2024-01-22 12:00:00'
+        },
+        { 
+          datasrc: 'product', 
+          group_id: 'P789013', 
+          client_id: 'CL002', 
+          client_ds_id: 1891,
+          record_id: 'PROD_002',
+          product_name: 'Wireless Mouse',
+          category: 'Accessories',
+          price: 29.99,
+          currency: 'USD',
+          stock_quantity: 150,
+          supplier: 'AccessoryWorld',
+          sku: 'MOUSE-001',
+          weight: '0.1 kg',
+          dimensions: '12 x 6 x 4 cm',
+          last_updated: '2024-01-22 11:30:00'
+        },
+        { 
+          datasrc: 'product', 
+          group_id: 'P789014', 
+          client_id: 'CL003', 
+          client_ds_id: 1892,
+          record_id: 'PROD_003',
+          product_name: 'USB Cable',
+          category: 'Cables',
+          price: 9.99,
+          currency: 'USD',
+          stock_quantity: 500,
+          supplier: 'CableCo',
+          sku: 'CABLE-001',
+          weight: '0.05 kg',
+          dimensions: '100 x 0.5 x 0.5 cm',
+          last_updated: '2024-01-22 10:15:00'
+        }
+      ],
+      'Invoice': [
+        { 
+          datasrc: 'invoice', 
+          group_id: 'I456789', 
+          client_id: 'CL001', 
+          client_ds_id: 3456,
+          record_id: 'INV_001',
+          invoice_date: '2024-01-20 00:00:00',
+          due_date: '2024-02-20 00:00:00',
+          status: 'paid',
+          total_amount: 299.99,
+          tax_amount: 24.99,
+          currency: 'USD',
+          payment_terms: 'Net 30',
+          billing_address: '123 Main St, City, State 12345',
+          last_updated: '2024-01-22 15:30:00'
+        },
+        { 
+          datasrc: 'invoice', 
+          group_id: 'I456790', 
+          client_id: 'CL002', 
+          client_ds_id: 3457,
+          record_id: 'INV_002',
+          invoice_date: '2024-01-21 00:00:00',
+          due_date: '2024-02-21 00:00:00',
+          status: 'pending',
+          total_amount: 149.50,
+          tax_amount: 12.45,
+          currency: 'USD',
+          payment_terms: 'Net 30',
+          billing_address: '456 Oak Ave, City, State 12345',
+          last_updated: '2024-01-22 09:15:00'
+        },
+        { 
+          datasrc: 'invoice', 
+          group_id: 'I456791', 
+          client_id: 'CL003', 
+          client_ds_id: 3458,
+          record_id: 'INV_003',
+          invoice_date: '2024-01-22 00:00:00',
+          due_date: '2024-02-22 00:00:00',
+          status: 'draft',
+          total_amount: 89.99,
+          tax_amount: 7.50,
+          currency: 'USD',
+          payment_terms: 'Net 30',
+          billing_address: '789 Pine Rd, City, State 12345',
+          last_updated: '2024-01-22 16:45:00'
+        }
+      ],
+      'Shipment': [
+        { 
+          datasrc: 'shipment', 
+          group_id: 'S234567', 
+          client_id: 'CL001', 
+          client_ds_id: 1234,
+          record_id: 'SHIP_001',
+          shipment_date: '2024-01-21 09:00:00',
+          status: 'delivered',
+          tracking_number: 'TRK123456789',
+          carrier: 'FedEx',
+          service_type: 'Express',
+          weight: '3.2 kg',
+          dimensions: '40 x 30 x 20 cm',
+          delivery_date: '2024-01-22 14:30:00',
+          last_updated: '2024-01-22 15:00:00'
+        },
+        { 
+          datasrc: 'shipment', 
+          group_id: 'S234568', 
+          client_id: 'CL002', 
+          client_ds_id: 1235,
+          record_id: 'SHIP_002',
+          shipment_date: '2024-01-22 10:00:00',
+          status: 'in_transit',
+          tracking_number: 'TRK987654321',
+          carrier: 'UPS',
+          service_type: 'Ground',
+          weight: '1.8 kg',
+          dimensions: '25 x 20 x 15 cm',
+          estimated_delivery: '2024-01-25 17:00:00',
+          last_updated: '2024-01-22 16:00:00'
+        },
+        { 
+          datasrc: 'shipment', 
+          group_id: 'S234569', 
+          client_id: 'CL003', 
+          client_ds_id: 1236,
+          record_id: 'SHIP_003',
+          shipment_date: '2024-01-22 14:00:00',
+          status: 'pending',
+          tracking_number: 'TRK456789123',
+          carrier: 'USPS',
+          service_type: 'Priority',
+          weight: '0.5 kg',
+          dimensions: '15 x 10 x 5 cm',
+          estimated_delivery: '2024-01-24 12:00:00',
+          last_updated: '2024-01-22 16:30:00'
+        }
+      ]
+    };
+
+    // For other entities, generate generic granular nested data
+    if (!nestedDataMap[entityName]) {
+      return [
+        { 
+          datasrc: entityName.toLowerCase(), 
+          group_id: `${entityName.charAt(0)}001`, 
+          client_id: 'CL001', 
+          client_ds_id: Math.floor(Math.random() * 9000) + 1000,
+          record_id: `${entityName.charAt(0)}_001`,
+          created_date: '2024-01-20 10:00:00',
+          status: 'active',
+          last_updated: '2024-01-22 12:00:00',
+          data_quality_score: Math.floor(Math.random() * 30) + 70
+        },
+        { 
+          datasrc: entityName.toLowerCase(), 
+          group_id: `${entityName.charAt(0)}002`, 
+          client_id: 'CL002', 
+          client_ds_id: Math.floor(Math.random() * 9000) + 1000,
+          record_id: `${entityName.charAt(0)}_002`,
+          created_date: '2024-01-21 11:00:00',
+          status: 'active',
+          last_updated: '2024-01-22 13:00:00',
+          data_quality_score: Math.floor(Math.random() * 30) + 70
+        },
+        { 
+          datasrc: entityName.toLowerCase(), 
+          group_id: `${entityName.charAt(0)}003`, 
+          client_id: 'CL003', 
+          client_ds_id: Math.floor(Math.random() * 9000) + 1000,
+          record_id: `${entityName.charAt(0)}_003`,
+          created_date: '2024-01-22 12:00:00',
+          status: 'inactive',
+          last_updated: '2024-01-22 14:00:00',
+          data_quality_score: Math.floor(Math.random() * 30) + 70
+        }
+      ];
+    }
+
+    return nestedDataMap[entityName];
+  };
+
+  // State for expanded rows
+  const [expandedRows, setExpandedRows] = useState(new Set());
+
+  // Toggle row expansion
+  const toggleRowExpansion = (entityName) => {
+    const newExpandedRows = new Set(expandedRows);
+    if (newExpandedRows.has(entityName)) {
+      newExpandedRows.delete(entityName);
+    } else {
+      newExpandedRows.add(entityName);
+    }
+    setExpandedRows(newExpandedRows);
+  };
+
+  // Calculate dynamic table height based on number of results
+  const getTableHeight = () => {
+    const dataLength = getDataGridData().length;
+    const rowHeight = 40; // Further reduced row height
+    const headerHeight = 40; // Further reduced header height
+    const minHeight = 120; // Further reduced minimum height
+    const maxHeight = 350; // Further reduced maximum height
+    
+    if (dataLength === 0) return minHeight;
+    
+    const calculatedHeight = headerHeight + (dataLength * rowHeight);
+    return Math.min(Math.max(calculatedHeight, minHeight), maxHeight);
+  };
+
+  // Build hierarchical data for abyss DataTable using subRows
+  const buildHierarchyData = () => {
+    // Start from same filtered base as grid
+    let entities = filterEntitiesSummary(searchTerm);
+    if (selectedStatus) {
+      entities = entities.filter(entity => entity.metrics.count[selectedStatus] > 0);
+    }
+    if (selectedDimension) {
+      const dimension = dummyData.quality_dimensions_summary.find((d) => d.name === selectedDimension);
+      if (dimension) {
+        const status = selectedStatus || 'pass';
+        const dimensionValue = dimension.metrics.count[status];
+        entities = entities.filter(entity => entity.metrics.count[status] === dimensionValue);
+      }
+    }
+
+    // Flatten nested_data rows across entities
+    const rows = [];
+    for (const e of entities) {
+      const nd = generateNestedData(e.name) || [];
+      for (const r of nd) rows.push(r);
+    }
+
+    // datasrc -> group_id -> client_id -> client_ds_id aggregation counts
+    const byDatasrc = new Map();
+    for (const r of rows) {
+      const ds = r.datasrc ?? 'unknown';
+      const g = r.group_id ?? 'null';
+      const c = r.client_id ?? 'null';
+      const cds = r.client_ds_id ?? 'null';
+
+      const dsNode = byDatasrc.get(ds) ?? { col1: `datasrc: ${ds}`, col2: 0, subRows: [], _groups: new Map() };
+      byDatasrc.set(ds, dsNode);
+      dsNode.col2 += 1; // count of group rows
+
+      const gNode = dsNode._groups.get(g) ?? { col1: `group_id: ${g}`, col2: 0, subRows: [], _clients: new Map() };
+      dsNode._groups.set(g, gNode);
+      gNode.col2 += 1; // count of client rows
+
+      const cNode = gNode._clients.get(c) ?? { col1: `client_id: ${c}`, col2: 0, subRows: [], _clientds: new Map() };
+      gNode._clients.set(c, cNode);
+      cNode.col2 += 1; // count of client_ds rows
+
+      const cdsNode = cNode._clientds.get(cds) ?? { col1: `client_ds_id: ${cds}`, col2: 0 };
+      cNode._clientds.set(cds, cdsNode);
+      cdsNode.col2 += 1; // leaf count
+    }
+
+    const materialize = (node) => {
+      if (node._groups) {
+        node.subRows = Array.from(node._groups.values()).map(materialize);
+        delete node._groups;
+      }
+      if (node._clients) {
+        node.subRows = Array.from(node._clients.values()).map(materialize);
+        delete node._clients;
+      }
+      if (node._clientds) {
+        node.subRows = Array.from(node._clientds.values());
+        delete node._clientds;
+      }
+      return node;
+    };
+
+    return Array.from(byDatasrc.values()).map(materialize);
+  };
+
+  const abyssColumns = [
+    { id: 'label', accessorKey: 'col1', accessor: 'col1', header: 'Label' },
+    { id: 'count', accessorKey: 'col2', accessor: 'col2', header: 'Count' },
+  ];
+
+  const abyssTableState = useDataTable({
+    initialData: buildHierarchyData(),
+    initialColumns: abyssColumns,
+    showExpansion: true,
+  });
+
+  return (
+    <div className="summary-tab-container">
+      <div className="summary-content">
+        <div className="filters-sidebar">
+          {/* Overall Status Filter */}
+          <div className="filter-section">
+            <div className="donut-chart-block">
+              <div style={{ width: '100%' }}>
+                <Charts.Donut
+                  data={getAbyssOverallDonut()}
+                  title="Overall"
+                  subtitle="Pass/Fail/Error"
+                  xAxisLabel="Status"
+                  yAxisLabel="Count"
+                />
+              </div>
+              <div className="donut-labels">
+                {getOverallScoreData().map((entry) => (
+                  <div
+                    key={entry.key}
+                    className={`donut-label ${
+                      selectedStatus === entry.key ? "active" : ""
+                    }`}
+                    onClick={() => setSelectedStatus(entry.key)}
+                  >
+                    <span style={{ backgroundColor: COLORS[entry.key] }}></span>
+                    {entry.name}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Quality Dimensions Filter */}
+          <div className="filter-section">
+            <div className="donut-chart-block">
+              <div style={{ width: '100%' }}>
+                <Charts.Donut
+                  data={getAbyssMetricsDonut()}
+                  title="Quality Dimensions"
+                  subtitle="Count by dimension"
+                  xAxisLabel="Dimension"
+                  yAxisLabel="Count"
+                />
+              </div>
+              <div className="donut-labels">
+                {dummyData.quality_dimensions_summary.map((entry) => (
+                  <div
+                    key={entry.name}
+                    className={`donut-label ${
+                      selectedDimension === entry.name ? "active" : ""
+                    }`}
+                    onClick={() => setSelectedDimension(entry.name)}
+                  >
+                    <span
+                      style={{ backgroundColor: COLORS[entry.name] }}
+                    ></span>
+                    {entry.name}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Center - Data Grid replaced by Abyss DataTable */}
+        <div className="bar-chart-section">
+          <div className="summary-header">
+            <div className="search-container">
+              <FaSearch className="search-icon" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search entities or rules..."
+                className="search-input"
+              />
+            </div>
+
+            <div className="filter-status">
+              {selectedStatus && (
+                <span className="active-filter">
+                  Status:{" "}
+                  {selectedStatus.charAt(0).toUpperCase() +
+                    selectedStatus.slice(1)}
+                </span>
+              )}
+              {selectedDimension && (
+                <span className="active-filter">
+                  Dimension: {selectedDimension}
+                </span>
+              )}
+            </div>
+
+            <button className="reset-button" onClick={handleReset}>
+              Reset
+            </button>
+          </div>
+
+          <div className="data-summary">
+            <div className="summary-stats">
+              <span className="stat-item">
+                <strong>Total Entities:</strong> {getDataGridData().length}
+              </span>
+              {getDataGridData().length > 0 && (
+                <>
+                  <span className="stat-item">
+                    <strong>Total Rules:</strong>{" "}
+                    {getDataGridData().reduce(
+                      (sum, entity) => sum + entity.total_rules,
+                      0
+                    )}
+                  </span>
+                  <span className="stat-item">
+                    <strong>Avg Quality Score:</strong>{" "}
+                    {Math.round(
+                      getDataGridData().reduce(
+                        (sum, entity) => sum + entity.quality_score,
+                        0
+                      ) / getDataGridData().length
+                    )}
+                    %
+                  </span>
+                </>
+              )}
+            </div>
+            {(selectedStatus || selectedDimension) && (
+              <div className="filter-info">
+                <strong>Currently showing:</strong>
+                {selectedStatus &&
+                  ` Status: ${
+                    selectedStatus.charAt(0).toUpperCase() +
+                    selectedStatus.slice(1)
+                  }`}
+                {selectedStatus && selectedDimension && " and "}
+                {selectedDimension && ` Dimension: ${selectedDimension}`}
+              </div>
+            )}
+          </div>
+
+          <div className="entity-table-scroll-box" style={{ maxHeight: `${getTableHeight()}px` }}>
+            <DataTable title="Expansion Rows" tableState={abyssTableState} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+export default OverviewTab;
